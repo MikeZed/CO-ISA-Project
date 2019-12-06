@@ -18,5 +18,8 @@
     <ClCompile Include="Assembler.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Simulator.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
