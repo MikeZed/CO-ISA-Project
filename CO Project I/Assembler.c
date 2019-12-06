@@ -1,5 +1,7 @@
 
+
 #define _CRT_SECURE_NO_WARNINGS
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +12,9 @@
 #define MAX_LINES 4096 
 #define MAX_LINE_LEN 500 
 #define MAX_LABEL_LEN 50
+#define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "halt", ".word"} 
+// all values except "halt" and ".word" match their opcode number!
+#define OPCODES_LEN 14 // the length of the array above 
 
 
 typedef	struct label {
@@ -73,12 +78,16 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 
 	char* number_sign_index = NULL;
 
+	int PC = 0;				   // current PC 
+
 	int i = 1;
 	
 	while (fgets(line, MAX_LINE_LEN, asm_file) != NULL && i<100) // read file line by line 
 	{
 		token = strtok(line, delim); // get first token in line
 
+		int a= check_label(token);
+		printf(" %d %s \n", a, token);
 		while (token != NULL && *token != '#')
 		{
 
@@ -99,18 +108,28 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 
 
 
+
+
 			// first pass - get labels
-			if (pass_num == 1) 
+			if (pass_num == 1)
 			{
-				check_label();
+				//check_label();
 
 			}
 			// second pass - get instructions in hex and write in file 
 			else
 			{
 
+
+
 				
-			};
+			}
+
+
+
+
+
+
 
 
 
@@ -132,13 +151,22 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 }
 
 
-// checks if line contains a label
-// if it does return TRUE, otherwise FALSE 
-int check_label() 
+// checks if string is a label
+// if it is return TRUE, otherwise FALSE 
+int check_label(char* line_start) 
 {
+	char* opcodes[] = OPCODES;
+	
+	if (line_start == NULL) return FALSE; 
 
-
-
+	for (int i = 0; i < OPCODES_LEN; i++)
+	{
+		if (strcmp(line_start, opcodes[i]) == 0)
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 // recieves opcode str, returns opcode number in hex 
