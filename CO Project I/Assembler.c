@@ -12,9 +12,9 @@
 #define MAX_LINES 4096 
 #define MAX_LINE_LEN 500 
 #define MAX_LABEL_LEN 50
-#define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "halt", ".word"} 
-// all values except "halt" and ".word" match their opcode number!
-#define OPCODES_LEN 14 // the length of the array above 
+#define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "0ph","1ph","2ph","halt", ".word"} 
+// all values match their opcode number! "0ph", "1ph" and "2ph" are place holders so the "halt"'s index would be 15, they can't be labels because they start with a digit
+#define OPCODES_LEN 17 // the length of the array above 
 
 
 typedef	struct label {
@@ -26,7 +26,7 @@ typedef	struct label {
 
 
 void read_file();
-int check_label();
+int return_value();
 int get_instruction(); 
 int get_opcode();
 
@@ -71,7 +71,7 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 {
 
 	char line[MAX_LINE_LEN];
-	char* delim = " \n\t,";    // line delimiters 
+	char* delim = " \n\t,:";    // line delimiters 
 
 	char* token;               // a token, will hold part of the line
 	int comment_start = FALSE; // if a token contains '#' it means a comment has started
@@ -86,8 +86,9 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 	{
 		token = strtok(line, delim); // get first token in line
 
-		int a= check_label(token);
+		int a= return_value(token);
 		printf(" %d %s \n", a, token);
+
 		while (token != NULL && *token != '#')
 		{
 
@@ -151,22 +152,25 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 }
 
 
-// checks if string is a label
-// if it is return TRUE, otherwise FALSE 
-int check_label(char* line_start) 
+// a line starts with label, an opcode or ".word"
+// the function recieves the first word in the line and returns:
+// its opcode number if its an opcode,
+// 16 if it's ".word",
+// -1 if it's  a label and 0 if it's NULL 
+int return_value(char* line_start)
 {
 	char* opcodes[] = OPCODES;
 	
-	if (line_start == NULL) return FALSE; 
+	if (line_start == NULL) return 0; 
 
 	for (int i = 0; i < OPCODES_LEN; i++)
 	{
 		if (strcmp(line_start, opcodes[i]) == 0)
 		{
-			return FALSE;
+			return i;
 		}
 	}
-	return TRUE;
+	return -1;
 }
 
 // recieves opcode str, returns opcode number in hex 
