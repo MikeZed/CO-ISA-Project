@@ -76,6 +76,10 @@ int main(int argc, char** argv)
 
 
 // SUGGESTION - SAVE ALL TOKENS AFTER READING A LINE INSTEAD OF ACCESSING THEM ONE BY ONE
+//              SHOULD TRY STRTOK AND SAVING IN ARRAY OR SSCANF WITH APPROPRIATE DELIMITERS  
+
+
+
 
 // performs first pass over the code
 // to get the labels and their addresses
