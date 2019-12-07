@@ -54,8 +54,6 @@ int main(int argc, char** argv)
 }
 
 
-// SUGGESTION - SAVE ALL TOKENS AFTER READING A LINE INSTEAD OF ACCESSING THEM ONE BY ONE
-
 // performs first pass over the code
 // to get the labels and their addresses
 void read_file(FILE* asm_file, FILE* out_file, Label Labels[], int pass_num)
@@ -155,17 +153,17 @@ void intialize_labels_array(Label Labels[])
 
 
 // updates the labels array 
-void update_labels(char* tokens[], int PC, Label* Labels[]) 
+void update_labels(char* tokens[], int PC, Label Labels[]) 
 {
 	if (check_value(tokens[0]) != -1) // check if label is present in the line 
 		return; 
 
 	int i = 0;
-	while (Labels[i]->address != - 1) // find empty label in the labels array 
+	while (Labels[i].address != - 1) // find empty label in the labels array 
 		i++;
 
-	strcpy(Labels[i]->name, tokens[0]); //add label to the array 
-	Labels[i]->address = PC;
+	strcpy(Labels[i].name, tokens[0]); //add label to the array 
+	Labels[i].address = PC;
 
 }
 
@@ -200,7 +198,7 @@ int get_reg()
 }
 
 
-int write_instruction(FILE* out_file, char* tokens, Label* Labels[])
+int write_instruction(FILE* out_file, char* tokens, Label Labels[])
 {
 
 
@@ -329,4 +327,4 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 }
 
 
-	
+	*/
