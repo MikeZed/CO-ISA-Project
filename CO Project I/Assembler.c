@@ -54,6 +54,7 @@ int main(int argc, char** argv)
 }
 
 
+// SUGGESTION - SAVE ALL TOKENS AFTER READING A LINE INSTEAD OF ACCESSING THEM ONE BY ONE
 
 // performs first pass over the code
 // to get the labels and their addresses
@@ -328,5 +329,4 @@ void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
 }
 
 
-
-*/
+	
