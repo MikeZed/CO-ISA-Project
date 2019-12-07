@@ -69,18 +69,25 @@ void read_file(FILE* asm_file, FILE* out_file, Label Labels[], int pass_num)
 	{
 		get_tokens(line, tokens);
 
-		/*
+		
 		for (int j = 0; j < MAX_TOKENS_IN_LINE; j++)
 		{
-			if (tokens[i] != NULL);
+			if (tokens[j] != NULL)
 				printf("%s ", tokens[j]);
-		}
-		printf(" \n");
-		*/
 
+			if (j == MAX_TOKENS_IN_LINE - 1)
+			{
+				printf(" %x \n", PC);
+				break;
+			}
+		}
+		
+		
+
+
+		PC += update_PC(tokens);
 
 /*
-		PC += update_PC(tokens);
 
 		// first pass - get labels
 		if (pass_num == 1) 
@@ -99,6 +106,33 @@ void read_file(FILE* asm_file, FILE* out_file, Label Labels[], int pass_num)
 // recieves tokens of the line and returns how much lines we should add to the PC
 int update_PC(char* tokens[])
 {
+	int first_token = check_value(tokens[0]);
+	int opcode; 
+	int rd_index = 2; // token index of the first register in the instruction 
+
+	if (first_token == -2) return 0; // check if empty line 
+
+	if (first_token == -1)  // check if first token is label
+	{
+		opcode = check_value(tokens[1]); // first token is label -> second one is opcode if exists
+
+		if (opcode == -2 )  // check if second token is NULL 
+			return 0; 
+	}
+	else  // first token is opcode
+	{
+		opcode = first_token; 
+		rd_index = 1;
+	}
+
+	if (opcode <= 6 || opcode == 15)  // opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra" or "halt"
+		return 1;
+	else 
+	{                            // opcode is "limm", "branch", "jal", "lw" or "sw"
+		if (opcode == 8 && strcmp(tokens[rd_index], "jr") == 0) // if opcode is "branch" and rd is "jr" increase PC by 1 
+			return 1;
+		else return 2; // else increase PC by 2
+	}
 
 
 
@@ -110,38 +144,35 @@ void get_tokens(char* line, char* tokens[])
 	char* delimiters = " \n\t,:";    // line delimiters 
 
 	char* number_sign_index = NULL;
+
 	int is_comment_start = FALSE;
 
-	char* token = strtok(line, delimiters);
 	int tokens_index = 0;
 
+	char* token = strtok(line, delimiters);
 
-	while (token != NULL && *token != '#')
+	while (token != NULL && *token != '#') // check if token is not NULL and doesnt begin with '#' 
 	{
 		number_sign_index = strchr(token, '#'); // number_sign - '#', holds address of '#' in token if exists
 
 		if (number_sign_index != NULL)  // check if token has '#'
 		{
 			*number_sign_index = '\0';  // truncate token 
-			is_comment_start = TRUE;       // indicates that after current token a comment has started
+			is_comment_start = TRUE;    // indicates that after current token a comment has started
 		}
 
 		tokens[tokens_index] = token;
 		tokens_index++;
 
-
-		if (is_comment_start) // if a comment has started -> read next line 
+		if (is_comment_start) // if a comment has started -> no more tokens 
 			break;
 
 		token = strtok(NULL, delimiters); // read next token 
-
 	}
 
 	for (int i = tokens_index; i < MAX_TOKENS_IN_LINE; i++) // set rest tokens to NULL 
-		tokens[i] = NULL;
+		tokens[i] = NULL; 
 }
-
-
 
 
 // intializes the labels array so that we know which labels are not empty
@@ -174,9 +205,9 @@ void update_labels(char* tokens[], int PC, Label Labels[])
 // -1 if it's  a label and -2 if it's NULL 
 int check_value(char* line_start)
 {
+	if (line_start == NULL) return -2;
+
 	char* opcodes[] = OPCODES;
-	
-	if (line_start == NULL) return -2; 
 
 	for (int i = 0; i < OPCODES_LEN; i++)
 	{
@@ -197,7 +228,7 @@ int get_reg()
 
 }
 
-
+// opcode reg1, reg2, reg3, imm -> AAAA
 int write_instruction(FILE* out_file, char* tokens, Label Labels[])
 {
 
@@ -205,6 +236,14 @@ int write_instruction(FILE* out_file, char* tokens, Label Labels[])
 
 }
 
+// .word 
+int write_to_memory(FILE* out_file, char* tokens, Label Labels[])
+{
+
+
+
+
+}
 
 
 

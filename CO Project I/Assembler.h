@@ -10,8 +10,8 @@
 #define FALSE 0
 
 #define MAX_LINES 4096 
-#define MAX_LINE_LEN 500 
-#define MAX_LABEL_LEN 50
+#define MAX_LINE_LEN 501 // +1 for '\0'
+#define MAX_LABEL_LEN 51 // +1 for '\0'
 #define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "0ph", "1ph", "2ph","halt", ".word"} 
 // all values' indices match their opcode number! "0ph", "1ph" and "2ph" are place holders so the "halt"'s index would be 15, 
 // they can't be labels because they start with a digit
