@@ -48,7 +48,38 @@ void limm(int rd, char memory_in[], int reg[], int pc)
 {
 	reg[rd] = atoi(memory_in[pc]);
 }
+void branch(int rd, int rs, int rt, int reg[], int *pc, int memory_in[][])
+{
+	int imm = atoi(memory_in[*pc+1]);
+	switch(rd)
+	{
+		case 0: if(reg[rs]==reg[rt]) *pc = imm; \\beq
+				else *pc += 2; 
+				break:
+		case 1: if(reg[rs]!=reg[rt]) *pc = imm; \\bne
+				else *pc += 2; 
+				break:
+		case 2: if(reg[rs]>reg[rt]) *pc = imm; \\branch if greater than - bgt
+				else *pc += 2; 
+				break:
+		case 3: if(reg[rs]<reg[rt]) *pc = imm; \\ branch if smaller than - bst
+				else *pc += 2; 
+				break:
+		case 4: if(reg[rs]>=reg[rt]) *pc = imm; \\ beq or bgt
+				else *pc += 2; 
+				break:
+		case 5: if(reg[rs]<=reg[rt]) *pc = imm; \\ beq or bst
+				else *pc += 2; 
+				break:
+		case 6: *pc = reg[rs];
+	}
+}
 
+void jal(int reg[], int *pc, int memory_in[][])
+{
+	reg[15]=*pc+2;
+	*pc=atoi(memory_in[*pc+1]);
+}
 void lw(int rd, int rs, int reg[], char memory_in[], int pc)
 {
 	reg[rd] = atoi(memory_in[atoi(memory_in[pc])+ reg[rs]]);
