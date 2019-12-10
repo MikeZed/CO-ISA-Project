@@ -1,5 +1,5 @@
 #include <iostream>
-#define _CRT_SECURE_NO_WARNINGS
+//#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -28,7 +28,7 @@ void sra(int rd, int rs, int rt, int* reg[REG_SIZE]);
 void limm(int rd, char memory_in[MAX_LINES][LINE_SIZE], int* reg[REG_SIZE], int pc);
 void branch(int rd, int rs, int rt, char memory_in[MAX_LINES][LINE_SIZE], int* reg[REG_SIZE], int* pc);
 void jal(int* reg[REG_SIZE], int* pc, char memory_in[MAX_LINES][LINE_SIZE]);
-void lw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], int pc);
+void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], int pc);
 void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int max_line_counter);
 void halt(int* pc);
 void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int max_line_counter);
@@ -158,7 +158,7 @@ void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES
 	case 7: limm(rd, memory_in, reg, *pc); *pc += 1; break;    //The opcode is limm
 	case 8: branch(rd, rs, rt, memory_in, reg, pc); *pc -= 1; break;    //The opcode is branch
 	case 9: jal(reg, pc, memory_in); *pc -= 1; break;    //The opcode is jal
-	case 10: lw(rd, rs, reg, memory_in, *pc); *pc += 1; break;    //The opcode is lw
+	case 10: lw(rd, rs, reg, memory_out, *pc); *pc += 1; break;    //The opcode is lw
 	case 11: sw(rd, rs, reg, memory_in, memory_out, *pc, max_line_counter); *pc += 1; break;    //The opcode is sw
 
 	case 15: halt(pc);    //The opcode is halt		
@@ -244,13 +244,13 @@ void jal(int** reg, int* pc, char memory_in[MAX_LINES][LINE_SIZE])
 	int imm = getHex(line);
 	*pc = imm;
 }
-void lw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], int pc)
+void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], int pc)
 {
 	char line[SIZE], line1[SIZE];
-	snprintf(line, SIZE, "%s%c", memory_in[pc + 1], '\0');
+	snprintf(line, SIZE, "%s%c", memory_out[pc + 1], '\0');
 	int imm = getHex(line);
 
-	snprintf(line1, SIZE, "%s%c", memory_in[imm + *reg[rs]], '\0');
+	snprintf(line1, SIZE, "%s%c", memory_out[imm + *reg[rs]], '\0');
 	*reg[rd] =getHex(line1);
 }
 void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int max_line_counter)
