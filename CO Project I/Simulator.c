@@ -67,7 +67,7 @@ int main(int argc, const char* argv[])
 	while (!feof(memin))//memory_in and memory_out are filled
 	{
 		int check;
-		if (check = fscanf(memin, "%s", memory_in[max_line_counter]) != 0) {
+		if (check = fscanf(memin, "%s", memory_in[max_line_counter]) != 0) { //Consider \n in fscanf and avoid using memout because probably there are changes to the code line pheraps there should be.
 			snprintf(memory_out[max_line_counter],SIZE,"%s%c", memory_in[max_line_counter],'\n');
 			max_line_counter++;
 		}	
@@ -260,8 +260,8 @@ void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE]
 	snprintf(line, SIZE, "%s%c", memory_in[pc + 1], '\0');
 	int imm = getHex(line);
 
-	snprintf(memory_out[imm + *reg[rs]], SIZE, "%04X" , *reg[rd]);
-	if (max_line_counter > imm + *reg[rs])
+	snprintf(memory_out[imm + *reg[rs]], SIZE, "%04X%c" , *reg[rd],'\n');
+	if (max_line_counter < imm + *reg[rs] && *reg[rd] != 0)
 		max_line_counter = imm + *reg[rs];
 }
 void halt(int* pc)
