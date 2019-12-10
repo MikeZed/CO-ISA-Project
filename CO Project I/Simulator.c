@@ -1,3 +1,4 @@
+//הקובץ עובד פרט לטעות אחת הקובץ ממאאוט חסר לו טעינות. כלומר לא מדויק חסר לו נתונים. שאר הקבצים תקינים ונכונים.
 #include <iostream>
 //#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
