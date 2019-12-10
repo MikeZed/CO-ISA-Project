@@ -1,4 +1,5 @@
 //הקובץ עובד פרט לטעות אחת הקובץ ממאאוט חסר לו טעינות. כלומר לא מדויק חסר לו נתונים. שאר הקבצים תקינים ונכונים.
+#include "pch.h"
 #include <iostream>
 //#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
@@ -30,9 +31,9 @@ void limm(int rd, char memory_in[MAX_LINES][LINE_SIZE], int* reg[REG_SIZE], int 
 void branch(int rd, int rs, int rt, char memory_in[MAX_LINES][LINE_SIZE], int* reg[REG_SIZE], int* pc);
 void jal(int* reg[REG_SIZE], int* pc, char memory_in[MAX_LINES][LINE_SIZE]);
 void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], int pc);
-void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int max_line_counter);
+void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int *max_line_counter);
 void halt(int* pc);
-void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int max_line_counter);
+void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int *max_line_counter_ptr);
 
 int main(int argc, const char* argv[])
 {
@@ -41,7 +42,7 @@ int main(int argc, const char* argv[])
 		printf("Arg Amount Error");
 		return 0;
 	}
-	FILE* memin, * memout, * regout, * trace, * count;
+	FILE* memin, *memout, *regout, *trace, *count;
 	memin = fopen(argv[1], "r");
 	memout = fopen(argv[2], "w");
 	regout = fopen(argv[3], "w");
@@ -53,8 +54,9 @@ int main(int argc, const char* argv[])
 		printf("FILE Error");
 		return 0;
 	}
-	
+
 	int cnt = 0, pc = 0; int max_line_counter = 0;
+	int *max_line_counter_ptr = &max_line_counter;
 	int reg_b[REG_SIZE] = { 0 };
 	int* reg[REG_SIZE];
 	for (int i = 0; i < REG_SIZE; i++)
@@ -68,9 +70,9 @@ int main(int argc, const char* argv[])
 	{
 		int check;
 		if (check = fscanf(memin, "%s", memory_in[max_line_counter]) != 0) { //Consider \n in fscanf and avoid using memout because probably there are changes to the code line pheraps there should be.
-			snprintf(memory_out[max_line_counter],SIZE,"%s%c", memory_in[max_line_counter],'\n');
+			snprintf(memory_out[max_line_counter], SIZE, "%s%c", memory_in[max_line_counter], '\n');
 			max_line_counter++;
-		}	
+		}
 	}
 	fclose(memin);
 
@@ -84,12 +86,12 @@ int main(int argc, const char* argv[])
 			printf("%c", line[i]);
 		}
 		line[4] = '\0';
-		printf("\n%c\n", memory_in[pc][1]);*/		
+		printf("\n%c\n", memory_in[pc][1]);*/
 		/*strncpy(line, memory_in[pc], 4);
 		line[4] = '\0';*/
 		printf("%s\n", line);
 		createTrace(trace, pc, line, reg, counter);
-		decipher_line(line, reg, memory_in, memory_out, pcp, max_line_counter);
+		decipher_line(line, reg, memory_in, memory_out, pcp, max_line_counter_ptr);
 		printf(" %d ", *counter);
 	}
 	//Exit:	
@@ -139,8 +141,8 @@ void createTrace(FILE* trace, int pc, char line[SIZE], int* reg[REG_SIZE], int* 
 }
 
 /*LINE Func*/
-void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int max_line_counter) {
-	
+void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int* max_line_counter_ptr) {
+
 	int opcode = hex2int(line[0]);
 	int rd = hex2int(line[1]);
 	int rs = hex2int(line[2]);
@@ -160,7 +162,7 @@ void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES
 	case 8: branch(rd, rs, rt, memory_in, reg, pc); *pc -= 1; break;    //The opcode is branch
 	case 9: jal(reg, pc, memory_in); *pc -= 1; break;    //The opcode is jal
 	case 10: lw(rd, rs, reg, memory_out, *pc); *pc += 1; break;    //The opcode is lw
-	case 11: sw(rd, rs, reg, memory_in, memory_out, *pc, max_line_counter); *pc += 1; break;    //The opcode is sw
+	case 11: sw(rd, rs, reg, memory_in, memory_out, *pc, max_line_counter_ptr); *pc += 1; break;    //The opcode is sw
 
 	case 15: halt(pc);    //The opcode is halt		
 	}
@@ -217,22 +219,22 @@ void branch(int rd, int rs, int rt, char memory_in[MAX_LINES][LINE_SIZE], int* r
 	switch (rd)
 	{
 	case 0: if (*reg[rs] == *reg[rt]) *pc = imm; //beq
-		  else *pc += 2;
+			else *pc += 2;
 		break;
 	case 1: if (*reg[rs] != *reg[rt]) *pc = imm; //bne
-		  else *pc += 2;
+			else *pc += 2;
 		break;
 	case 2: if (*reg[rs] > *reg[rt]) *pc = imm; //branch if greater than - bgt
-		  else *pc += 2;
+			else *pc += 2;
 		break;
 	case 3: if (*reg[rs] < *reg[rt]) *pc = imm; // branch if smaller than - bst
-		  else *pc += 2;
+			else *pc += 2;
 		break;
 	case 4: if (*reg[rs] >= *reg[rt]) *pc = imm; // beq or bgt
-		  else *pc += 2;
+			else *pc += 2;
 		break;
 	case 5: if (*reg[rs] <= *reg[rt]) *pc = imm; // beq or bst
-		  else *pc += 2;
+			else *pc += 2;
 		break;
 	case 6: *pc = *reg[rs];
 	}
@@ -241,7 +243,7 @@ void jal(int** reg, int* pc, char memory_in[MAX_LINES][LINE_SIZE])
 {
 	*reg[15] = *pc + 2;
 	char line[SIZE];
-	snprintf(line,SIZE,"%s%c", memory_in[*pc + 1], '\0');
+	snprintf(line, SIZE, "%s%c", memory_in[*pc + 1], '\0');
 	int imm = getHex(line);
 	*pc = imm;
 }
@@ -252,17 +254,17 @@ void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], in
 	int imm = getHex(line);
 
 	snprintf(line1, SIZE, "%s%c", memory_out[imm + *reg[rs]], '\0');
-	*reg[rd] =getHex(line1);
+	*reg[rd] = getHex(line1);
 }
-void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int max_line_counter)
+void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int *max_line_counter_ptr)
 {
 	char line[SIZE];
 	snprintf(line, SIZE, "%s%c", memory_in[pc + 1], '\0');
 	int imm = getHex(line);
 
-	snprintf(memory_out[imm + *reg[rs]], SIZE, "%04X%c" , *reg[rd],'\n');
-	if (max_line_counter < imm + *reg[rs] && *reg[rd] != 0)
-		max_line_counter = imm + *reg[rs];
+	snprintf(memory_out[imm + *reg[rs]], SIZE, "%04X%c", *reg[rd], '\n');
+	if (*max_line_counter_ptr < imm + *reg[rs])//&& *reg[rd] != 0
+		*max_line_counter_ptr = imm + *reg[rs];
 }
 void halt(int* pc)
 {
