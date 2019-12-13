@@ -15,6 +15,7 @@
 /*Utility func*/
 int getHex(char* source);
 int hex2int(char ch);
+int getAddress(int address);
 /*Create func*/
 void createTrace(FILE* trace, int pc, char line[SIZE], int* reg[REG_SIZE], int* count);
 void createLastFiles(FILE* memout, char memory_out[MAX_LINES][SIZE], int max_line_counter, FILE* regout, int* reg[REG_SIZE], FILE* count, int counter);
@@ -34,7 +35,7 @@ void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], in
 void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int *max_line_counter);
 void halt(int* pc);
 void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int *max_line_counter_ptr);
-int getAddress(int address);
+
 
 
 
