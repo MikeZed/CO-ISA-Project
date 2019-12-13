@@ -34,6 +34,9 @@ void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], in
 void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int *max_line_counter);
 void halt(int* pc);
 void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int *max_line_counter_ptr);
+int getAddress(int address);
+
+
 
 int main(int argc, const char* argv[])
 {
@@ -80,15 +83,6 @@ int main(int argc, const char* argv[])
 	{
 		char line[SIZE];
 		snprintf(line, SIZE, "%s%c", memory_in[pc], '\0');
-		/*for (int i = 0; i < 4; i++)
-		{
-			line[i] = memory_in[pc][i];
-			printf("%c", line[i]);
-		}
-		line[4] = '\0';
-		printf("\n%c\n", memory_in[pc][1]);*/
-		/*strncpy(line, memory_in[pc], 4);
-		line[4] = '\0';*/
 		printf("%s\n", line);
 		createTrace(trace, pc, line, reg, counter);
 		decipher_line(line, reg, memory_in, memory_out, pcp, max_line_counter_ptr);
@@ -101,6 +95,9 @@ int main(int argc, const char* argv[])
 	fclose(regout);
 	fclose(count);
 }
+
+
+
 /*Utility Func*/
 int getHex(char* source)
 {
@@ -116,6 +113,18 @@ int hex2int(char ch)
 		return ch - 'a' + 10;
 	return -1;
 }
+int getAddress(int address)
+{
+	if (address >= 4096)
+	{
+		printf("address given, %X, is invalid.\n", address);
+		address = address & 0x0FFF; //if given address is too high, take only 12 LSBs.
+		printf("simulator refers only to 12 LSBs, %X in this case.\n", address);
+	}	
+	return address;
+}
+
+
 /*Create Func*/
 void createLastFiles(FILE* memout, char memory_out[MAX_LINES][SIZE], int max_line_counter, FILE* regout, int* reg[REG_SIZE], FILE* count, int counter)
 {
@@ -139,6 +148,7 @@ void createTrace(FILE* trace, int pc, char line[SIZE], int* reg[REG_SIZE], int* 
 	fprintf(trace, "\n");
 	(*count)++;
 }
+
 
 /*LINE Func*/
 void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int* pc, int* max_line_counter_ptr) {
@@ -194,6 +204,52 @@ void sll(int rd, int rs, int rt, int* reg[REG_SIZE])
 }
 void sra(int rd, int rs, int rt, int* reg[REG_SIZE])
 {
+	/******************************************************************************
+
+                            Online C Compiler.
+                Code, Compile, Run and Debug C program online.
+Write your code in this editor and press "Run" button to compile and execute it.
+
+******************************************************************************
+
+#include <stdio.h>
+	void sra(int rd, int rs, int rt)
+	{
+		if (rt >= 16)
+		{
+			rd = 0;
+			printf("result of sra : %04X\n", 0);
+			return;
+		}
+		if (rs >= (int)pow(2, 15))//number in rs is negative
+		{
+			rd = rs >> rt;
+			int p = 15;
+			for (int i = 0; i < rt; i++, p--)
+			{
+				if (p < 0) break;
+				rd += (int)pow(2, p);
+				printf("p is : %d.\npower is : %04x\n", p, (int)pow(2, p));
+			}
+
+
+		}
+		else
+			rd = rs >> rt;
+		printf("result of sra : %04X\n", rd);
+	}
+
+	int main()
+	{
+		int rs = 0x8001;
+		int rd = 0x0;
+		int rt = 16;
+		sra(rd, rs, rt);
+		printf("normal shift right is : %04x\n", rs >> rt);
+		printf("rt modulu 16 is : %d\n", rt % 16);
+		return 0;
+	}
+	*/
 	if (*reg[rs] >= (int)pow(2, 15))
 	{
 		*reg[rd] = *reg[rs] >> *reg[rt];
@@ -218,25 +274,37 @@ void branch(int rd, int rs, int rt, char memory_in[MAX_LINES][LINE_SIZE], int* r
 	int imm = getHex(line);
 	switch (rd)
 	{
-	case 0: if (*reg[rs] == *reg[rt]) *pc = imm; //beq
-			else *pc += 2;
+	case 0: 
+		if (*reg[rs] == *reg[rt])  //beq
+			*pc = getAddress(imm);
+		else *pc += 2;
 		break;
-	case 1: if (*reg[rs] != *reg[rt]) *pc = imm; //bne
-			else *pc += 2;
+	case 1: 
+		if (*reg[rs] != *reg[rt])  //bne
+			*pc = getAddress(imm);	
+		else *pc += 2;
 		break;
-	case 2: if (*reg[rs] > *reg[rt]) *pc = imm; //branch if greater than - bgt
-			else *pc += 2;
+	case 2: 
+		if (*reg[rs] > *reg[rt]) //branch if greater than - bgt
+			*pc = getAddress(imm);
+		else *pc += 2;
 		break;
-	case 3: if (*reg[rs] < *reg[rt]) *pc = imm; // branch if smaller than - bst
-			else *pc += 2;
+	case 3: 
+		if (*reg[rs] < *reg[rt]) // branch if smaller than - bst
+			*pc = getAddress(imm); 
+		else *pc += 2;
 		break;
-	case 4: if (*reg[rs] >= *reg[rt]) *pc = imm; // beq or bgt
-			else *pc += 2;
+	case 4: 
+		if (*reg[rs] >= *reg[rt]) // beq or bgt
+			*pc = getAddress(imm); 
+		else *pc += 2;
 		break;
-	case 5: if (*reg[rs] <= *reg[rt]) *pc = imm; // beq or bst
-			else *pc += 2;
+	case 5: 
+		if (*reg[rs] <= *reg[rt]) // beq or bst
+			*pc = getAddress(imm); 
+		else *pc += 2;
 		break;
-	case 6: *pc = *reg[rs];
+	case 6: *pc = getAddress(*reg[rs]);
 	}
 }
 void jal(int** reg, int* pc, char memory_in[MAX_LINES][LINE_SIZE])
@@ -245,15 +313,15 @@ void jal(int** reg, int* pc, char memory_in[MAX_LINES][LINE_SIZE])
 	char line[SIZE];
 	snprintf(line, SIZE, "%s%c", memory_in[*pc + 1], '\0');
 	int imm = getHex(line);
-	*pc = imm;
+	*pc = getAddress(imm);
 }
 void lw(int rd, int rs, int* reg[REG_SIZE], char memory_out[MAX_LINES][SIZE], int pc)
 {
 	char line[SIZE], line1[SIZE];
 	snprintf(line, SIZE, "%s%c", memory_out[pc + 1], '\0');
 	int imm = getHex(line);
-
-	snprintf(line1, SIZE, "%s%c", memory_out[imm + *reg[rs]], '\0');
+	int address = getAddress(imm + *reg[rs]);
+	snprintf(line1, SIZE, "%s%c", memory_out[address], '\0');
 	*reg[rd] = getHex(line1);
 }
 void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE], char memory_out[MAX_LINES][SIZE], int pc, int *max_line_counter_ptr)
@@ -261,10 +329,10 @@ void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE]
 	char line[SIZE];
 	snprintf(line, SIZE, "%s%c", memory_in[pc + 1], '\0');
 	int imm = getHex(line);
-
-	snprintf(memory_out[imm + *reg[rs]], SIZE, "%04X%c", *reg[rd], '\n');
-	if (*max_line_counter_ptr < imm + *reg[rs])//&& *reg[rd] != 0
-		*max_line_counter_ptr = imm + *reg[rs];
+	int address = getAddress(imm + *reg[rs]);
+	snprintf(memory_out[address], SIZE, "%04X%c", *reg[rd], '\n');
+	if (*max_line_counter_ptr < address)//&& *reg[rd] != 0
+		*max_line_counter_ptr = address;
 }
 void halt(int* pc)
 {
