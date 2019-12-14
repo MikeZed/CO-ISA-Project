@@ -1,8 +1,33 @@
 
 
+#define _CRT_SECURE_NO_WARNINGS
 
-#include "Assembler.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+
+#define TRUE 1 
+#define FALSE 0
+
+#define MAX_LINES 4096 
+#define MAX_LINE_LEN 501 // +1 for '\0'
+#define MAX_LABEL_LEN 51 // +1 for '\0'
 #define MAX_TOKENS_IN_LINE 6
+
+#define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "0ph", "1ph", "2ph","halt", ".word"} 
+// all values' indices match their opcode number! "0ph", "1ph" and "2ph" are place holders so the "halt"'s index would be 15, 
+// they can't be labels because they start with a digit
+#define OPCODES_LEN 17 // the length of the array above 
+
+#define REGS { "$zero", "$at", "$v0", "$a0" ,"$a1", "$t0", "$t1", "$t2", "$t3", "$s0", "$s1", "$s2", "$gp", "$sp", "$fp","$ra"} 
+// all registers' indices match their number! 
+#define REGS_LEN 16 // the length of the array above 
+
+
+#define BRANCH_RD { "beq", "bne", "bgt", "blt", "bge", "ble", "jr"}
+// all branch rd values match their number!  
+#define BRANCH_RD_LEN 7 // the length of the array above 
+
 
 typedef	struct label {
 
@@ -12,23 +37,31 @@ typedef	struct label {
 } Label;
 
 
-int check_value(char* line_start);
 void read_file(FILE* asm_file, FILE* out_file, int pass_num);
-int update_PC(char* tokens[]);
-void get_tokens(char* line, char* tokens[]);
-void intialize_labels_array();
-void update_labels(char* tokens[], int PC);
-void write_instruction(FILE* out_file, char* tokens[]); 
-void correct_line(char* line, char*corrected_line); 
 void write_memory_to_file(FILE* out_file);
+void write_instruction(FILE* out_file, char* tokens[], int PC);
+
+int check_value(char* line_start);
+int get_reg(char* reg);
+
+void correct_line(char* line, char*corrected_line);
+void get_tokens(char* line, char* tokens[]);
+
+int get_imm(char* str);
+
+int update_PC(char* tokens[]);
+void update_labels(char* tokens[], int PC);
+
+int is_equal_str(char* str1, char* str2);
+int str2int(char* str);
 
 
-Label Labels[MAX_LINES];
-int label_index = 0; 
+Label Labels[MAX_LINES]; // stores labels name and addresses 
+int label_index = 0; //first empty label index in labels array 
 
-int Memory[MAX_LINES] = { 0 };
-int mem_index = 0;
-int mem_end = 0;
+int Memory[MAX_LINES] = { 0 }; // represents the memory, in the end we be written to memin.txt
+int mem_index = 0; // current empty slot in memory array 
+int mem_end = 0; // store index of the last non-zero slot 
 
 
 int main(int argc, char** argv)
@@ -36,11 +69,12 @@ int main(int argc, char** argv)
 	FILE * ASM_file = NULL; 
 	FILE * MEMIN = NULL; 
 
-//	for (int i = 0; i < argc; i++)
-//	{
-//		printf("%s\n", argv[i]);
-//	}
-	
+	if (argc < 4)
+	{
+		printf("Arg Amount Error\n");
+		exit(1);
+	}
+
 	ASM_file = fopen(argv[2], "r");
 	MEMIN = fopen(argv[3], "w+");
 
@@ -56,11 +90,7 @@ int main(int argc, char** argv)
 	// read file, perform second pass 
 	read_file(ASM_file, MEMIN, 2);
 
-	//for (int i = 0; i < mem_end; i++)
-	//{
-	//	printf("%04X\n", Memory[i]);
-	//}
-
+	// write from memory array to memin.txt 
 	write_memory_to_file(MEMIN);
 
 	fclose(ASM_file);
@@ -84,21 +114,9 @@ void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 
 	while (fgets(line, MAX_LINE_LEN, asm_file) != NULL) // read file line by line 
 	{
-		
 		correct_line(line, corrected_line);
 
 		get_tokens(corrected_line, tokens);
-
-		
-		/*
-		for (int j = 0; j < MAX_TOKENS_IN_LINE; j++)
-		{
-			if (tokens[j] != NULL)
-				printf("%s ", tokens[j]);
-		}
-		if (tokens[0] != NULL)
-			printf(" %x \n", PC);
-		*/
 
 		// first pass - get labels
 		if (pass_num == 1)
@@ -108,16 +126,15 @@ void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 		else 
 			write_instruction(out_file, tokens, Labels, PC);
 		
+		// update Program Counter 
 		PC += update_PC(tokens);
 		
 	}
 	rewind(asm_file); 
-	for (int i = 0; i < label_index; i++)
-		if  (Labels[i].address!=-1)
-			printf("%s %x\n", Labels[i].name, Labels[i].address);
-			
 }
 
+
+// writes to out_file the contents of the memory array 
 void write_memory_to_file(FILE* out_file) 
 {
 	for (int i = 0; i < mem_end; i++)
@@ -140,6 +157,8 @@ void correct_line(char* line, char*corrected_line)
 	}
 
 }
+
+
 // recieves tokens of the line and returns how much lines we should add to the PC
 int update_PC(char* tokens[])
 {
@@ -171,6 +190,7 @@ int update_PC(char* tokens[])
 		else return 2; // else increase PC by 2
 	}
 }
+
 
 // splits line into tokens 
 void get_tokens(char* line, char* tokens[])
@@ -218,17 +238,18 @@ void update_labels(char* tokens[], int PC)
 	strcpy(Labels[label_index].name, tokens[0]); //add label to the array 
 	Labels[label_index].address = PC;
 
+	int i = 0;
+	while (Labels[label_index].name[i] != ':')
+		i++;
 
-	char* colon_address = strchr(Labels[label_index].name, ':'); // remove ':' at the end of the label 
-	
-	//*colon_address = '\0';
+	Labels[label_index].name[i] = '\0';
 
 	label_index++; 
 }
 
 
 // converts instruction to hex and writes to file 
-void write_instruction(FILE* out_file, char* tokens[], Label Labels[], int PC)
+void write_instruction(FILE* out_file, char* tokens[], int PC)
 {
 	int opcode, rd, rs, rt, imm;
 	int first_token, index_offset = 0;
@@ -249,7 +270,6 @@ void write_instruction(FILE* out_file, char* tokens[], Label Labels[], int PC)
 	}
 
 	opcode = check_value(tokens[0 + index_offset]);
-	//printf("%u\n", opcode);
 
 	if (opcode == 16) // if opcode is ".word"
 	{
@@ -267,7 +287,7 @@ void write_instruction(FILE* out_file, char* tokens[], Label Labels[], int PC)
 	rs = get_reg(tokens[2 + index_offset]);
 	rt = get_reg(tokens[3 + index_offset]);
 
-	imm = get_imm(tokens[4 + index_offset], Labels);
+	imm = get_imm(tokens[4 + index_offset]);
 
 
 	if (opcode >= 7 && opcode <= 11)   // opcode is "limm", "branch", "jal", "lw" or "sw"
@@ -276,10 +296,9 @@ void write_instruction(FILE* out_file, char* tokens[], Label Labels[], int PC)
 		if (opcode == 8 && rd == 6) // if opcode is "branch" and rd is "jr" imm is not used 
 			use_imm = FALSE;
 	}
-//	printf("%X%X%X%X\n", opcode, rd, rs, rt);
+
 	Memory[mem_index] = opcode * 16 * 16 * 16 + rd * 16 * 16 + rs * 16 + rt;
 	mem_index++;
-
 
 	if (use_imm) 
 	{
@@ -289,11 +308,10 @@ void write_instruction(FILE* out_file, char* tokens[], Label Labels[], int PC)
 
 	if (mem_index > mem_end)
 		mem_end = mem_index;
-
 }
 
 // converts string of a number (decimal or hex) to int
-int get_imm(char* str, Label Labels[])
+int get_imm(char* str)
 {
 	// check if imm is label
 	for (int i = 0; i < label_index; i++) // check if imm is label, if it is return address
@@ -302,40 +320,6 @@ int get_imm(char* str, Label Labels[])
 	
 	return str2int(str);
 }
-
-
-/*
-// .word 
-write_to_memory(FILE* out_file, char* tokens[], int PC)
-{
-	int address = str2int(tokens[1]); // convert address to int 
-	int data = str2int(tokens[2]); // convert data    to int  
-
-	char line[10];
-
-	rewind(out_file);
-
-	int i = 0;
-	while (i != address && fgets(line, 10, out_file) != NULL)
-		i++;
-
-	if (i == address) // we got to address
-		fprintf(out_file, "04X\n", data);
-
-	else // we reached EOF 
-	{
-		for (int j = i; j < address; j++)
-			fprintf(out_file, "0000\n");
-		fprintf(out_file, "%04X\n", data);
-	}
-
-	rewind(out_file);
-	printf("%d", PC); 
-	i = 0;
-	while (i != PC && fgets(line, 10, out_file) != NULL)
-		i++;
-}
-*/
 
 
 // a line starts with label, an opcode or ".word"
@@ -378,6 +362,7 @@ int get_reg(char* reg)
 	return -1; // shouldn't get here
 }
 
+
 // compares lower case version of two strings,
 // if equal returns TRUE, else FALSE
 int is_equal_str(char* str1, char* str2)
@@ -395,6 +380,7 @@ int is_equal_str(char* str1, char* str2)
 	return TRUE;
 }
 
+
 // gets str of a number returns its integer value 
 int str2int(char* str) 
 {
@@ -403,130 +389,3 @@ int str2int(char* str)
 	else // str is decimal 
 		return strtol(str, NULL, 10);
 }
-
-
-
-// TODO - add label using, .word , imm conversion from correct base 
-
-
-// add lower / upper token management,
-// maybe add support for tokens with the same name as opcodes - keep ':' and identify labels according to it, and then remove it before inserting it to the Labels array
-// imm 
-// .word 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-
-// SUGGESTION - SAVE ALL TOKENS AFTER READING A LINE INSTEAD OF ACCESSING THEM ONE BY ONE
-
-// performs first pass over the code
-// to get the labels and their addresses
-void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file)
-{
-
-	char line[MAX_LINE_LEN];
-	char* delim = " \n\t,:";    // line delimiters 
-
-	char* token;               // a token, will hold part of the line
-	int is_comment_start = FALSE; // if a token contains '#' it means a comment has started
-	int is_line_start = TRUE;
-
-	char* number_sign_index = NULL;
-
-	int PC = 0;				   // current PC 
-
-	int i = 1;
-
-	while (fgets(line, MAX_LINE_LEN, asm_file) != NULL && i < 100) // read file line by line 
-	{
-		is_line_start = TRUE;
-		is_comment_start = FALSE;
-
-		token = strtok(line, delim); // get first token in line
-
-
-		while (token != NULL && *token != '#')
-		{
-
-			number_sign_index = strchr(token, '#'); // number_sign - '#', holds address of '#' in token if exists
-
-			if (number_sign_index != NULL)  // check if token has '#'
-			{
-				*number_sign_index = '\0';  // truncate token 
-				is_comment_start = TRUE;       // indicates that after current token a comment has started
-			}
-
-			// do stuff with token 
-
-
-
-
-
-
-			printf("%s \n", token);
-
-			// first pass - get labels
-			if (pass_num == 1 && is_line_start)
-				update_labels(token, PC, Labels);
-
-
-			// second pass - get instructions in hex and write in file 
-			else
-			{
-
-
-
-
-			}
-
-
-
-
-
-			// end 
-
-
-			if (is_comment_start) // if a comment has started -> read next line 
-				break;
-
-			token = strtok(NULL, delim); // read next token 
-			is_line_start = FALSE;
-
-		}
-	}
-}
-
-
-	*/
