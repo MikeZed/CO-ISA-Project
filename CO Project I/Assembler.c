@@ -1,5 +1,6 @@
 
 
+
 #include "Assembler.h"
 #define MAX_TOKENS_IN_LINE 6
 
@@ -12,12 +13,22 @@ typedef	struct label {
 
 
 int check_value(char* line_start);
-void read_file(FILE* asm_file, Label* Labels[], int pass_num, FILE* out_file);
+void read_file(FILE* asm_file, FILE* out_file, int pass_num);
 int update_PC(char* tokens[]);
 void get_tokens(char* line, char* tokens[]);
-void intialize_labels_array(Label* Labels[]);
-void update_labels(char* tokens[], int PC, Label* Labels[]);
-void write_instruction(FILE* out_file, char* tokens[], Label Labels[]); 
+void intialize_labels_array();
+void update_labels(char* tokens[], int PC);
+void write_instruction(FILE* out_file, char* tokens[]); 
+void correct_line(char* line, char*corrected_line); 
+void write_memory_to_file(FILE* out_file);
+
+
+Label Labels[MAX_LINES];
+int label_index = 0; 
+
+int Memory[MAX_LINES] = { 0 };
+int mem_index = 0;
+int mem_end = 0;
 
 
 int main(int argc, char** argv)
@@ -25,9 +36,6 @@ int main(int argc, char** argv)
 	FILE * ASM_file = NULL; 
 	FILE * MEMIN = NULL; 
 
-	Label Labels[MAX_LINES];
-
-	intialize_labels_array(Labels); 
 //	for (int i = 0; i < argc; i++)
 //	{
 //		printf("%s\n", argv[i]);
@@ -43,10 +51,17 @@ int main(int argc, char** argv)
 	}
 
 	// read file, perform first pass 
-	read_file(ASM_file, NULL, Labels, 1);
+	read_file(ASM_file, NULL, 1);
 
 	// read file, perform second pass 
-	read_file(ASM_file, MEMIN, Labels, 2);
+	read_file(ASM_file, MEMIN, 2);
+
+	//for (int i = 0; i < mem_end; i++)
+	//{
+	//	printf("%04X\n", Memory[i]);
+	//}
+
+	write_memory_to_file(MEMIN);
 
 	fclose(ASM_file);
 	fclose(MEMIN);
@@ -58,50 +73,73 @@ int main(int argc, char** argv)
 // performs first pass and second pass over the code
 // pass_num = 1 -> first pass  -> get labels      (get the labels and their addresses)
 // pass_num = 2 -> second pass -> write to memory (write instructions)
-void read_file(FILE* asm_file, FILE* out_file, Label Labels[], int pass_num)
+void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 {
-	char line[MAX_LINE_LEN];
+	char line[MAX_LINE_LEN]; // holds line from file
+	char corrected_line[MAX_LINE_LEN + 1]; // holds line after correction+1 for the additional whitespace
+
 	char* tokens[MAX_TOKENS_IN_LINE]; // tokens, will hold parts of the line
 
 	int PC = 0;				   // current PC 
 
 	while (fgets(line, MAX_LINE_LEN, asm_file) != NULL) // read file line by line 
 	{
-		get_tokens(line, tokens);
+		
+		correct_line(line, corrected_line);
 
+		get_tokens(corrected_line, tokens);
+
+		
 		/*
-
 		for (int j = 0; j < MAX_TOKENS_IN_LINE; j++)
 		{
 			if (tokens[j] != NULL)
 				printf("%s ", tokens[j]);
-
-			if (j == MAX_TOKENS_IN_LINE - 1)
-			{
-				printf(" %x \n", PC);
-				break;
-			}
 		}
+		if (tokens[0] != NULL)
+			printf(" %x \n", PC);
 		*/
 
 		// first pass - get labels
 		if (pass_num == 1)
-			update_labels(tokens, PC, Labels);
+			update_labels(tokens, PC);
 
 		// second pass - get instructions in hex and write in file
 		else 
-		{
-			write_instruction(out_file, tokens, Labels);
-		}
+			write_instruction(out_file, tokens, Labels, PC);
+		
 		PC += update_PC(tokens);
+		
 	}
 	rewind(asm_file); 
-	//for (int i = 0; i < 10; i++)
-	//	if  (Labels[i].address!=-1)
-	//		printf("%s %d\n", Labels[i].name, Labels[i].address);
-
+	for (int i = 0; i < label_index; i++)
+		if  (Labels[i].address!=-1)
+			printf("%s %x\n", Labels[i].name, Labels[i].address);
+			
 }
 
+void write_memory_to_file(FILE* out_file) 
+{
+	for (int i = 0; i < mem_end; i++)
+		fprintf(out_file, "%04X\n", Memory[i]); 
+	
+}
+
+// corrects line from file if there is no ' ' after ':', so we won't read the label and opcode as one token 
+void correct_line(char* line, char*corrected_line) 
+{
+	strcpy(corrected_line, line);
+
+	char* colon_index1 = strchr(corrected_line, ':'); // check if there is ':' in line
+	if (colon_index1 != NULL) // if there is -> insert a whitespace after it for correct splitting of the line
+	{
+		*(colon_index1 + 1) = ' ';
+		char* colon_index2 = strchr(line, ':');
+
+		strcpy(colon_index1 + 2, colon_index2 + 1);
+	}
+
+}
 // recieves tokens of the line and returns how much lines we should add to the PC
 int update_PC(char* tokens[])
 {
@@ -123,12 +161,13 @@ int update_PC(char* tokens[])
 		opcode = first_token;
 		rd_index = 1;
 	}
+	if (opcode == 16) return 0; // if opcode is ".word" 
 
-	if (opcode <= 6 || opcode == 15)  // opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra" or "halt"
+	if (opcode <= 6 || opcode == 15)  // if opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra" or "halt"
 		return 1;
 	else     // opcode is "limm", "branch", "jal", "lw" or "sw"
 	{     
-		if (opcode == 8 && strcmp(tokens[rd_index], "jr") == 0)return 1; // if opcode is "branch" and rd is "jr" increase PC by 1 
+		if (opcode == 8 && strcmp(tokens[rd_index], "jr") == 0) return 1; // if opcode is "branch" and rd is "jr" increase PC by 1 
 		else return 2; // else increase PC by 2
 	}
 }
@@ -136,7 +175,7 @@ int update_PC(char* tokens[])
 // splits line into tokens 
 void get_tokens(char* line, char* tokens[])
 {
-	char* delimiters = " \n\t,:";    // line delimiters 
+	char* delimiters = " \n\t,";    // line delimiters 
 
 	char* number_sign_index = NULL;
 
@@ -170,32 +209,26 @@ void get_tokens(char* line, char* tokens[])
 }
 
 
-// intializes the labels array so that we know which labels are not empty
-void intialize_labels_array(Label Labels[])
-{
-	for (int i = 0; i < MAX_LINES; i++)
-		Labels[i].address = -1; 
-}
-
-
 // updates the labels array 
-void update_labels(char* tokens[], int PC, Label Labels[]) 
+void update_labels(char* tokens[], int PC) 
 {
 	if (check_value(tokens[0]) != -1) // check if label is present in the line 
 		return; 
 
-	int i = 0;
-	while (Labels[i].address != - 1) // find empty label in the labels array 
-		i++;
+	strcpy(Labels[label_index].name, tokens[0]); //add label to the array 
+	Labels[label_index].address = PC;
 
-	strcpy(Labels[i].name, tokens[0]); //add label to the array 
-	Labels[i].address = PC;
 
+	char* colon_address = strchr(Labels[label_index].name, ':'); // remove ':' at the end of the label 
+	
+	//*colon_address = '\0';
+
+	label_index++; 
 }
 
 
-// opcode reg1, reg2, reg3, imm -> AAAA
-void write_instruction(FILE* out_file, char* tokens[], Label Labels[])
+// converts instruction to hex and writes to file 
+void write_instruction(FILE* out_file, char* tokens[], Label Labels[], int PC)
 {
 	int opcode, rd, rs, rt, imm;
 	int first_token, index_offset = 0;
@@ -220,7 +253,13 @@ void write_instruction(FILE* out_file, char* tokens[], Label Labels[])
 
 	if (opcode == 16) // if opcode is ".word"
 	{
-		write_to_memory(out_file, tokens);
+		int address = str2int(tokens[1]); // convert address to int 
+		int data = str2int(tokens[2]);    // convert data    to int  
+
+		Memory[address] = data;
+
+		if (address + 1 > mem_end)
+			mem_end = address+1;
 		return;
 	}
 
@@ -233,80 +272,147 @@ void write_instruction(FILE* out_file, char* tokens[], Label Labels[])
 
 	if (opcode >= 7 && opcode <= 11)   // opcode is "limm", "branch", "jal", "lw" or "sw"
 	{
-		use_imm = TRUE; 
-		if (opcode == 8 && rd == 6) // if opcode is "branch" and rd is "jr" increase PC by 1 
-			use_imm = FALSE; 
+		use_imm = TRUE;
+		if (opcode == 8 && rd == 6) // if opcode is "branch" and rd is "jr" imm is not used 
+			use_imm = FALSE;
+	}
+//	printf("%X%X%X%X\n", opcode, rd, rs, rt);
+	Memory[mem_index] = opcode * 16 * 16 * 16 + rd * 16 * 16 + rs * 16 + rt;
+	mem_index++;
+
+
+	if (use_imm) 
+	{
+		Memory[mem_index] = imm;
+		mem_index++;
 	}
 
-	fprintf(out_file,  "%X%X%X%X\n", opcode, rd, rs, rt); 
-
-	//printf("%u %u %u %u\n", opcode, rd, rs, rt);
-	//printf( "%X%X%X%X\n", opcode, rd, rs, rt);
-
-	if (use_imm)
-		fprintf(out_file, "%04X\n", imm);
-		
+	if (mem_index > mem_end)
+		mem_end = mem_index;
 
 }
+
+// converts string of a number (decimal or hex) to int
+int get_imm(char* str, Label Labels[])
+{
+	// check if imm is label
+	for (int i = 0; i < label_index; i++) // check if imm is label, if it is return address
+		if (strcmp(str, Labels[i].name) == 0) 
+			return Labels[i].address;	
+	
+	return str2int(str);
+}
+
+
+/*
+// .word 
+write_to_memory(FILE* out_file, char* tokens[], int PC)
+{
+	int address = str2int(tokens[1]); // convert address to int 
+	int data = str2int(tokens[2]); // convert data    to int  
+
+	char line[10];
+
+	rewind(out_file);
+
+	int i = 0;
+	while (i != address && fgets(line, 10, out_file) != NULL)
+		i++;
+
+	if (i == address) // we got to address
+		fprintf(out_file, "04X\n", data);
+
+	else // we reached EOF 
+	{
+		for (int j = i; j < address; j++)
+			fprintf(out_file, "0000\n");
+		fprintf(out_file, "%04X\n", data);
+	}
+
+	rewind(out_file);
+	printf("%d", PC); 
+	i = 0;
+	while (i != PC && fgets(line, 10, out_file) != NULL)
+		i++;
+}
+*/
+
 
 // a line starts with label, an opcode or ".word"
 // the function recieves the first word in the line and returns:
 // its opcode number if its an opcode,
 // 16 if it's ".word",
-// -1 if it's  a label and -2 if it's NULL 
+// -1 if it's a label and -2 if it's NULL 
 int check_value(char* line_start)
 {
 	if (line_start == NULL) return -2;
 
+	char* has_colon = strchr(line_start, ':'); // checks if token has the ':' at the end of it 
+
+	if (has_colon != NULL) return -1;
+
 	char* opcodes[] = OPCODES;
 
 	for (int i = 0; i < OPCODES_LEN; i++)
-		if (strcmp(line_start, opcodes[i]) == 0)
+		if (is_equal_str(line_start, opcodes[i]))
 			return i;
 
-	return -1;
+	return -3;
 }
 
 
-// recieves register str, returns register number in hex 
+// recieves register str, returns register number  
 int get_reg(char* reg)
 {
 	char* regs[] = REGS;
 	char* branch_rd[] = BRANCH_RD;
 
 	for (int i = 0; i < REGS_LEN; i++) // check which register reg is
-		if (strcmp(reg, regs[i]) == 0)
+		if (is_equal_str(reg, regs[i]))
 			return i;
 
 	for (int i = 0; i < BRANCH_RD_LEN; i++) 	// if reg is not one of the register it is part of the branch instruction
-		if (strcmp(reg, branch_rd[i]) == 0)
+		if (is_equal_str(reg, branch_rd[i]))
 			return i;
 
 	return -1; // shouldn't get here
-} 
-
-// converts string of a number (decimal or hex) to int
-int get_imm(char* str, Label Labels[])
-{
-
-
-
-}
-// .word 
-write_to_memory(FILE* out_file, char* tokens[])
-{
-	int address, data; 
-
-
-
-
 }
 
+// compares lower case version of two strings,
+// if equal returns TRUE, else FALSE
+int is_equal_str(char* str1, char* str2)
+{
+	int i = 0;
+	while (str1[i] != '\0' || str2[i] != '\0')
+	{
+		if (tolower(str1[i]) != tolower(str2[i])) // convert to lower case and compare
+			return FALSE;
+		i++;
+	}
+	if (str1[i] != '\0' || str2[i] != '\0') // if strings are of diffrent length they are not equal 
+		return FALSE;
+
+	return TRUE;
+}
+
+// gets str of a number returns its integer value 
+int str2int(char* str) 
+{
+	if (str[0] == '0' &&  str[1] == 'x') // check if str is hex
+		return strtol(str, NULL, 0);
+	else // str is decimal 
+		return strtol(str, NULL, 10);
+}
 
 
-	
 
 // TODO - add label using, .word , imm conversion from correct base 
+
+
+// add lower / upper token management,
+// maybe add support for tokens with the same name as opcodes - keep ':' and identify labels according to it, and then remove it before inserting it to the Labels array
+// imm 
+// .word 
 
 
 
