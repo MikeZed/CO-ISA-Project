@@ -102,7 +102,10 @@ int main(int argc, const char* argv[])
 /*Utility Func*/
 int getHex(char* source)
 {
-	return (int)strtol(source, NULL, 16);
+	int n = (int)strtol(source, NULL, 16);
+	if( n > 0x7fff)
+		n -= 0x10000;
+	return n;
 }
 int hex2int(char ch)
 {
@@ -299,5 +302,5 @@ void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE]
 }
 void halt(int* pc)
 {
-	*pc = -1000;
+	*pc = -10;//DESTROY!!
 }
