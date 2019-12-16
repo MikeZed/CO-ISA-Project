@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 {
 	char line[MAX_LINE_LEN]; // holds line from file
-	char corrected_line[MAX_LINE_LEN + 1]; // holds line after correction+1 for the additional whitespace
+	char corrected_line[MAX_LINE_LEN + 1]; // holds line after correction, +1 for the additional whitespace
 
 	char* tokens[MAX_TOKENS_IN_LINE]; // tokens, will hold parts of the line
 
@@ -135,11 +135,12 @@ void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 
 
 // writes to out_file the contents of the memory array 
-void write_memory_to_file(FILE* out_file) 
+void write_memory_to_file(FILE* out_file)
 {
-	for (int i = 0; i < mem_end; i++)
-		fprintf(out_file, "%04X\n", Memory[i]); 
-	
+	for (int i = 0; i < mem_end; i++) {
+		fprintf(out_file, "%04X\n", Memory[i] & 0xffff); // "& 0xffff " is for dealing with negative numbers
+	}
+
 }
 
 // corrects line from file if there is no ' ' after ':', so we won't read the label and opcode as one token 
@@ -148,12 +149,24 @@ void correct_line(char* line, char*corrected_line)
 	strcpy(corrected_line, line);
 
 	char* colon_index1 = strchr(corrected_line, ':'); // check if there is ':' in line
-	if (colon_index1 != NULL) // if there is -> insert a whitespace after it for correct splitting of the line
+	//char* space_index = strchr(corrected_line, ' '); // pointer to first space in line
+	if (colon_index1 != NULL) // if there is -> make sure there are no whitespaces before it and at least one whitespace after it 
 	{
-		*(colon_index1 + 1) = ' ';
-		char* colon_index2 = strchr(line, ':');
+		while (*(colon_index1 - 1) == ' ' || *(colon_index1 - 1) == '\t') // make sure there are no whitespaces before ':' 
+		{
+			*(colon_index1 - 1) = ':';
+			*(colon_index1) = ' '; 
+			colon_index1--;
+		} 
 
-		strcpy(colon_index1 + 2, colon_index2 + 1);
+
+		if (*(colon_index1 + 1) != ' ' || *(colon_index1 + 1) != '\t') // make sure there is at least one whitespaces after ':'  
+		{
+			*(colon_index1 + 1) = ' ';
+			char* colon_index2 = strchr(line, ':');
+
+			strcpy(colon_index1 + 2, colon_index2 + 1);
+		}
 	}
 
 }
@@ -387,5 +400,5 @@ int str2int(char* str)
 	if (str[0] == '0' &&  str[1] == 'x') // check if str is hex
 		return strtol(str, NULL, 0);
 	else // str is decimal 
-		return strtol(str, NULL, 10);
+		return strtol(str, NULL, 10); 
 }
