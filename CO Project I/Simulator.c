@@ -102,7 +102,10 @@ int main(int argc, const char* argv[])
 /*Utility Func*/
 int getHex(char* source)
 {
-	return (int)strtol(source, NULL, 16);
+	int n = (int)strtol(source, NULL, 16);
+	if (n > 0x7fff)
+		n -= 0x10000;
+	return n;
 }
 int hex2int(char ch)
 {
@@ -112,16 +115,24 @@ int hex2int(char ch)
 		return ch - 'A' + 10;
 	if (ch >= 'a' && ch <= 'f')
 		return ch - 'a' + 10;
+	printf("Char given, %c, is invalid - non hex character.\n", ch);
 	return -1;
 }
 int getAddress(int address)
 {
+	if (address < 0)
+	{
+		printf("Address given, %X, is invalid - negative.\n", address);
+		return -10;
+	}
+
 	if (address >= 4096)
 	{
-		printf("address given, %X, is invalid.\n", address);
+		printf("Address given, %X, is invalid - exceeds limited space in memory.\n", address);
 		address = address & 0x0FFF; //if given address is too high, take only 12 LSBs.
-		printf("simulator refers only to 12 LSBs, %X in this case.\n", address);
-	}	
+		printf("Simulator refers only to 12 LSBs, %X in this case.\n", address);
+	}
+
 	return address;
 }
 
@@ -135,7 +146,10 @@ void createLastFiles(FILE* memout, char memory_out[MAX_LINES][SIZE], int max_lin
 	}
 	for (int i = 0; i < max_line_counter; i++)
 	{
-		fprintf(memout, "%04X\n", getHex(memory_out[i]));
+		int instruction = getHex(memory_out[i]);
+		if (instruction < 0)
+			instruction -= 0xFFFF0000;
+		fprintf(memout, "%04X\n" , instruction);
 	}
 	fprintf(count, "%d\n", counter);
 }
@@ -158,10 +172,21 @@ void decipher_line(char line[SIZE], int* reg[REG_SIZE], char memory_in[MAX_LINES
 	int rd = hex2int(line[1]);
 	int rs = hex2int(line[2]);
 	int rt = hex2int(line[3]);
-
+	if (opcode == 15)
+	{
+		halt(pc);
+		return;
+	}
+	if (rd == 0 && opcode != 8 && opcode != 11 && opcode!=9)
+	{
+		if(opcode >= 7)
+			*pc += 1;
+		*pc += 1;
+		return;
+	}
 	switch (opcode)
 	{
-	case 0:	add(rd, rs, rt, reg); break;	//The opcode is add
+	case 0:	add(rd ,rs, rt, reg); break;	//The opcode is add
 	case 1: sub(rd, rs, rt, reg); break;    //The opcode is sub
 	case 2: mul(rd, rs, rt, reg); break;    //The opcode is mul
 	case 3: andf(rd, rs, rt, reg); break;    //The opcode is and
@@ -205,52 +230,6 @@ void sll(int rd, int rs, int rt, int* reg[REG_SIZE])
 }
 void sra(int rd, int rs, int rt, int* reg[REG_SIZE])
 {
-	/******************************************************************************
-
-                            Online C Compiler.
-                Code, Compile, Run and Debug C program online.
-Write your code in this editor and press "Run" button to compile and execute it.
-
-******************************************************************************
-
-#include <stdio.h>
-	void sra(int rd, int rs, int rt)
-	{
-		if (rt >= 16)
-		{
-			rd = 0;
-			printf("result of sra : %04X\n", 0);
-			return;
-		}
-		if (rs >= (int)pow(2, 15))//number in rs is negative
-		{
-			rd = rs >> rt;
-			int p = 15;
-			for (int i = 0; i < rt; i++, p--)
-			{
-				if (p < 0) break;
-				rd += (int)pow(2, p);
-				printf("p is : %d.\npower is : %04x\n", p, (int)pow(2, p));
-			}
-
-
-		}
-		else
-			rd = rs >> rt;
-		printf("result of sra : %04X\n", rd);
-	}
-
-	int main()
-	{
-		int rs = 0x8001;
-		int rd = 0x0;
-		int rt = 16;
-		sra(rd, rs, rt);
-		printf("normal shift right is : %04x\n", rs >> rt);
-		printf("rt modulu 16 is : %d\n", rt % 16);
-		return 0;
-	}
-	*/
 	if (*reg[rs] >= (int)pow(2, 15))
 	{
 		*reg[rd] = *reg[rs] >> *reg[rt];
@@ -275,34 +254,34 @@ void branch(int rd, int rs, int rt, char memory_in[MAX_LINES][LINE_SIZE], int* r
 	int imm = getHex(line);
 	switch (rd)
 	{
-	case 0: 
+	case 0:
 		if (*reg[rs] == *reg[rt])  //beq
 			*pc = getAddress(imm);
 		else *pc += 2;
 		break;
-	case 1: 
+	case 1:
 		if (*reg[rs] != *reg[rt])  //bne
-			*pc = getAddress(imm);	
+			*pc = getAddress(imm);
 		else *pc += 2;
 		break;
-	case 2: 
+	case 2:
 		if (*reg[rs] > *reg[rt]) //branch if greater than - bgt
 			*pc = getAddress(imm);
 		else *pc += 2;
 		break;
-	case 3: 
+	case 3:
 		if (*reg[rs] < *reg[rt]) // branch if smaller than - bst
-			*pc = getAddress(imm); 
+			*pc = getAddress(imm);
 		else *pc += 2;
 		break;
-	case 4: 
+	case 4:
 		if (*reg[rs] >= *reg[rt]) // beq or bgt
-			*pc = getAddress(imm); 
+			*pc = getAddress(imm);
 		else *pc += 2;
 		break;
-	case 5: 
+	case 5:
 		if (*reg[rs] <= *reg[rt]) // beq or bst
-			*pc = getAddress(imm); 
+			*pc = getAddress(imm);
 		else *pc += 2;
 		break;
 	case 6: *pc = getAddress(*reg[rs]);
@@ -337,5 +316,5 @@ void sw(int rd, int rs, int* reg[REG_SIZE], char memory_in[MAX_LINES][LINE_SIZE]
 }
 void halt(int* pc)
 {
-	*pc = -1000;
+	*pc = -10;//DESTROY!!
 }
