@@ -112,16 +112,24 @@ int hex2int(char ch)
 		return ch - 'A' + 10;
 	if (ch >= 'a' && ch <= 'f')
 		return ch - 'a' + 10;
+	printf("Char given, %c, is invalid - non hex character.\n", ch);
 	return -1;
 }
 int getAddress(int address)
 {
+	if(adress < 0)
+	{
+		printf("Address given, %X, is invalid - negative.\n", address);
+		return -10;
+	}
+	
 	if (address >= 4096)
 	{
-		printf("address given, %X, is invalid.\n", address);
+		printf("Address given, %X, is invalid - exceeds limited space in memory.\n", address);
 		address = address & 0x0FFF; //if given address is too high, take only 12 LSBs.
-		printf("simulator refers only to 12 LSBs, %X in this case.\n", address);
+		printf("Simulator refers only to 12 LSBs, %X in this case.\n", address);
 	}	
+	
 	return address;
 }
 
@@ -205,52 +213,6 @@ void sll(int rd, int rs, int rt, int* reg[REG_SIZE])
 }
 void sra(int rd, int rs, int rt, int* reg[REG_SIZE])
 {
-	/******************************************************************************
-
-                            Online C Compiler.
-                Code, Compile, Run and Debug C program online.
-Write your code in this editor and press "Run" button to compile and execute it.
-
-******************************************************************************
-
-#include <stdio.h>
-	void sra(int rd, int rs, int rt)
-	{
-		if (rt >= 16)
-		{
-			rd = 0;
-			printf("result of sra : %04X\n", 0);
-			return;
-		}
-		if (rs >= (int)pow(2, 15))//number in rs is negative
-		{
-			rd = rs >> rt;
-			int p = 15;
-			for (int i = 0; i < rt; i++, p--)
-			{
-				if (p < 0) break;
-				rd += (int)pow(2, p);
-				printf("p is : %d.\npower is : %04x\n", p, (int)pow(2, p));
-			}
-
-
-		}
-		else
-			rd = rs >> rt;
-		printf("result of sra : %04X\n", rd);
-	}
-
-	int main()
-	{
-		int rs = 0x8001;
-		int rd = 0x0;
-		int rt = 16;
-		sra(rd, rs, rt);
-		printf("normal shift right is : %04x\n", rs >> rt);
-		printf("rt modulu 16 is : %d\n", rt % 16);
-		return 0;
-	}
-	*/
 	if (*reg[rs] >= (int)pow(2, 15))
 	{
 		*reg[rd] = *reg[rs] >> *reg[rt];
