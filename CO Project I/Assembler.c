@@ -37,9 +37,9 @@ typedef	struct label {
 } Label;
 
 
-void read_file(FILE* asm_file, FILE* out_file, int pass_num);
+void read_file(FILE* asm_file, int pass_num);
 void write_memory_to_file(FILE* out_file);
-void write_instruction(FILE* out_file, char* tokens[], int PC);
+void write_instruction(char* tokens[], int PC);
 
 int check_value(char* line_start);
 int get_reg(char* reg);
@@ -72,7 +72,6 @@ int main(int argc, char** argv)
 	if (argc < 4)
 	{
 		printf("Arg Amount Error\n");
-		exit(1);
 	}
 
 	ASM_file = fopen(argv[2], "r");
@@ -85,10 +84,10 @@ int main(int argc, char** argv)
 	}
 
 	// read file, perform first pass 
-	read_file(ASM_file, NULL, 1);
+	read_file(ASM_file, 1);
 
 	// read file, perform second pass 
-	read_file(ASM_file, MEMIN, 2);
+	read_file(ASM_file, 2);
 
 	// write from memory array to memin.txt 
 	write_memory_to_file(MEMIN);
@@ -103,7 +102,7 @@ int main(int argc, char** argv)
 // performs first pass and second pass over the code
 // pass_num = 1 -> first pass  -> get labels      (get the labels and their addresses)
 // pass_num = 2 -> second pass -> write to memory (write instructions)
-void read_file(FILE* asm_file, FILE* out_file, int pass_num)
+void read_file(FILE* asm_file, int pass_num)
 {
 	char line[MAX_LINE_LEN]; // holds line from file
 	char corrected_line[MAX_LINE_LEN + 1]; // holds line after correction, +1 for the additional whitespace
@@ -124,11 +123,11 @@ void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 
 		// second pass - get instructions in hex and write in file
 		else 
-			write_instruction(out_file, tokens, PC);
+			write_instruction(tokens, PC);
 		
 		// update Program Counter 
 		PC += update_PC(tokens);
-		
+
 	}
 	rewind(asm_file); 
 }
@@ -150,7 +149,6 @@ void correct_line(char* line, char*corrected_line)
 	strcpy(corrected_line, line);
 
 	char* colon_index1 = strchr(corrected_line, ':'); // check if there is ':' in line
-	//char* space_index = strchr(corrected_line, ' '); // pointer to first space in line
 	if (colon_index1 != NULL) // if there is -> make sure there are no whitespaces before it and at least one whitespace after it 
 	{
 		while (*(colon_index1 - 1) == ' ' || *(colon_index1 - 1) == '\t') // make sure there are no whitespaces before ':' 
@@ -261,7 +259,7 @@ void update_labels(char* tokens[], int PC)
 
 
 // converts instruction to hex and writes to Memory array  
-void write_instruction(FILE* out_file, char* tokens[], int PC)
+void write_instruction(char* tokens[], int PC)
 {
 	int opcode, rd, rs, rt, imm;
 	int first_token, index_offset = 0;
@@ -353,7 +351,7 @@ int check_value(char* line_start)
 		if (is_equal_str(line_start, opcodes[i]))
 			return i;
 
-	return -3;
+	return -3; // shouldn't get here 
 }
 
 
