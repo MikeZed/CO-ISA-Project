@@ -88,6 +88,8 @@ int main(int argc, const char* argv[])
 		createTrace(trace, pc, line, reg, counter);
 		decipher_line(line, reg, memory_in, memory_out, pcp, max_line_counter_ptr);
 		printf(" %d ", *counter);
+		if(pc > 4095 )
+			pc -= 4095;
 	}
 	//Exit:	
 	fclose(trace);
