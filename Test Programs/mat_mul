@@ -1,60 +1,89 @@
 #mult_mat - A x B
 #start:
 
-mat_mul:	limm $sp , S0 , $0 , 128
-		limm $t0 , $0 , $0 , -3 # t0 = -3
-		add $sp , $sp , $t0 # sp = sp - 3 --- allocate space for stored values in stack
-		sw $s0 , $sp , $0 , 0 # store value of s0 in stack
-		sw $s1 , $sp , $0 , 1 # store value of s1 in stack
-		sw $s2 , $sp , $0 , 2 # store value of s2 in stack
-		
-		limm $s1 , $0 , $0 , 0x10F # set $s1 to the address of the first argument of matrix B, minus 1.
-		limm $s2 , $0 , $0 , 0x120 # set $s0 to the address of the first argument of matrix C.
-		
-for1:	limm $t0 , $0 , $0 , 1 # t0 = 1
-		add  $s1 , $s1 , $t0  # s1 is now pointing the next column of matrix B. if reached here first time - set s1 to first column of B.
-		limm $t0 , $0 , $0 , 0x114
-		barnch bge, $s1 , $t0 , END #finished running on rhe columns of B, branch to END.
-		limm $s0 , $0 , $0 , 0x100 # set $s0 to the address of the first argument of matrix A.
-		
-for2:	lw $t0 , $s0 , $0 , 0 # t0 = A[a0] 
-		lw $t1 , $s1 , $0 , 0 # t1 = B[a1]
-		mul $t0 , $t0 , $t1   # t0 = t0*t1
-
-		lw $t1 , $s0 , $0 , 1 # t1 = A[s0+1] 
-		lw $t2 , $s1 , $0 , 4 # t2 = B[s1+4]
-		mul $t1 , $t0 , $t1   # t1 = t1*t0
-
-		add $t0 , $t0 , $t1 # t0 = t1 + t0
-
-		lw $t1 , $s0 , $0 , 2 # t1 = A[s0+2] 
-		lw $t2 , $s1 , $0 , 8 # t2 = B[s1+8]
-		mul $t1 , $t1 , $t2   # t1 = t1*t2
-		
-		lw $t2 , $s0 , $0 , 3  # t2 = A[s0+3] 
-		lw $t3 , $s1 , $0 , 12 # t3 = B[s1+12]
-		mul $t2 , $t2 , $t3    # t2 = t2*t3
-
-		add $t1 , $t2 , $t1 # t1 = t2 + t1
-		
-		add $t0 , $t0 , $t1 # t0 = t0 + t1 --- t0 has the value of the first argument in result matrix.
-		sw $t0 , $s2 , $0 , 0 # save result to the matrix. 
-		
-		limm $t0 , $0 , $0 , 1 # t0 = 1
-		add $s2 , $s2 , $t0    # s2 is now pointing to the next argument in the result matrix C.
-		limm $t0 , $0 , $0 , 4 # t0 = 4
-		add $s0 , $s0 , $t0    # s0 is now pointing to the next row of matrix A.
-		limm $t1 , $0 , $0 , 0x110
-		barnch bge, $s0 , $t1 , for1 #finished running on rhe rows of A, branch to for1.
-		branch beq $0 , $0 , for2 #if reached here, go to for2.
-		
-END:	lw $s0 , $sp , $0 , 0 # restore values from stack
-		lw $s1 , $sp , $0 , 1 # ""
-		lw $s2 , $sp , $0 , 2 # ""
-		limm $t0 , $0 , $0 , 3 # t0 = 3
-		add $sp , $sp , $t0 # sp = sp + 3 --- restore space in stack.
-		
-		
-		
-		
+mat_mul:
+init_val:		limm $t0, $0, $0, 1		#initiate value of reg $t0 to 1.
+			limm $t1, $0, $0, 0x100 #initiate value of reg $t1 to point the address of first matrix, A.
+			limm $t2, $0, $0, 0x11F #t2 is the address of last argument of the second matrix.
+mat_init:
+			sw $0 , $t1, $0, 0 		#set argument of matrix in address $t1 to 0.
+			add $t1 , $t1, $t0 		#t1 += 1 --- t1 points to the next argument of the matrix.
+			branch ble $t1, $t2, mat_init	#if $t1 <= $t2 branch back to the init_mat loop.
+									#overall the init_mat loop sets all the arguments of both matrixes A and B to 0.
 			
+			limm $t1, $0, $0, 0x100	#set value of reg $t1 to point the address of first matrix, A.
+			limm $t2, $0, $0, 0x10F	#t2 is the address of last argument of first matrix, A.
+			limm $t3, $0, $0, 5 	#set t3 = 5
+			
+init_A:			sw $t0, $t1, $0, 0
+			add $t1 , $t1, $t3 		#t1 += 1 --- t1 points to the next argument of the matrix.
+			branch ble $t1, $t2, init_A	#if $t1 <= $t2 branch back to the init_A loop.
+									#overall A is set to be the unit matrix.
+			
+			limm $t1, $0, $0, 0x110	
+			limm $t2, $0, $0, 0x11F	
+			limm $t3, $0, $0, 1
+init_B:			sw $t3, $t1, $0, 0 
+			add $t3, $t3, $t0
+			add $t1, $t1, $t0
+			branch ble $t1, $t2, init_B
+						#overall matrix B is set to [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]
+			
+			
+			limm $sp , S0 , $0 , 128
+			limm $t0 , $0 , $0 , -3 # t0 = -3
+			add $sp , $sp , $t0 # sp = sp - 3 --- allocate space for stored values in stack
+			sw $s0 , $sp , $0 , 0 # store value of s0 in stack
+			sw $s1 , $sp , $0 , 1 # store value of s1 in stack
+			sw $s2 , $sp , $0 , 2 # store value of s2 in stack
+			
+			limm $s1 , $0 , $0 , 0x10F # set $s1 to the address of the first argument of matrix B, minus 1.
+			limm $s2 , $0 , $0 , 0x120 # set $s0 to the address of the first argument of matrix C.
+			
+for1:			limm $t0 , $0 , $0 , 1 # t0 = 1
+			add  $s1 , $s1 , $t0  # s1 is now pointing the next column of matrix B. if reached here first time - set s1 to first column of B.
+			limm $t0 , $0 , $0 , 0x114
+			barnch bge, $s1 , $t0 , END #finished running on rhe columns of B, branch to END.
+			limm $s0 , $0 , $0 , 0x100 # set $s0 to the address of the first argument of matrix A.
+			
+for2:			lw $t0 , $s0 , $0 , 0 # t0 = A[a0] 
+			lw $t1 , $s1 , $0 , 0 # t1 = B[a1]
+			mul $t0 , $t0 , $t1   # t0 = t0*t1
+
+			lw $t1 , $s0 , $0 , 1 # t1 = A[s0+1] 
+			lw $t2 , $s1 , $0 , 4 # t2 = B[s1+4]
+			mul $t1 , $t0 , $t1   # t1 = t1*t0
+
+			add $t0 , $t0 , $t1 # t0 = t1 + t0
+
+			lw $t1 , $s0 , $0 , 2 # t1 = A[s0+2] 
+			lw $t2 , $s1 , $0 , 8 # t2 = B[s1+8]
+			mul $t1 , $t1 , $t2   # t1 = t1*t2
+			
+			lw $t2 , $s0 , $0 , 3  # t2 = A[s0+3] 
+			lw $t3 , $s1 , $0 , 12 # t3 = B[s1+12]
+			mul $t2 , $t2 , $t3    # t2 = t2*t3
+
+			add $t1 , $t2 , $t1 # t1 = t2 + t1
+			
+			add $t0 , $t0 , $t1 # t0 = t0 + t1 --- t0 has the value of the first argument in result matrix.
+			sw $t0 , $s2 , $0 , 0 # save result to the matrix. 
+			
+			limm $t0 , $0 , $0 , 1 # t0 = 1
+			add $s2 , $s2 , $t0    # s2 is now pointing to the next argument in the result matrix C.
+			limm $t0 , $0 , $0 , 4 # t0 = 4
+			add $s0 , $s0 , $t0    # s0 is now pointing to the next row of matrix A.
+			limm $t1 , $0 , $0 , 0x110
+			barnch bge, $s0 , $t1 , for1 #finished running on rhe rows of A, branch to for1.
+			branch beq $0 , $0 , for2 #if reached here, go to for2.
+			
+END:			lw $s0 , $sp , $0 , 0 # restore values from stack
+			lw $s1 , $sp , $0 , 1 # ""
+			lw $s2 , $sp , $0 , 2 # ""
+			limm $t0 , $0 , $0 , 3 # t0 = 3
+			add $sp , $sp , $t0 # sp = sp + 3 --- release space in stack.
+			
+			
+			
+			
+				
