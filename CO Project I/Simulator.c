@@ -1,7 +1,7 @@
-//הקובץ עובד פרט לטעות אחת הקובץ ממאאוט חסר לו טעינות. כלומר לא מדויק חסר לו נתונים. שאר הקבצים תקינים ונכונים.
+
 #include "pch.h"
 #include <iostream>
-//#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -88,6 +88,8 @@ int main(int argc, const char* argv[])
 		createTrace(trace, pc, line, reg, counter);
 		decipher_line(line, reg, memory_in, memory_out, pcp, max_line_counter_ptr);
 		printf(" %d ", *counter);
+		if(pc > 4095 )
+			pc -= 4095;
 	}
 	//Exit:	
 	fclose(trace);
