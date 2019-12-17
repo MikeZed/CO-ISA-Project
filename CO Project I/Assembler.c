@@ -159,7 +159,6 @@ void correct_line(char* line, char*corrected_line)
 			colon_index1--;
 		} 
 
-
 		if (*(colon_index1 + 1) != ' ' || *(colon_index1 + 1) != '\t') // make sure there is at least one whitespaces after ':'  
 		{
 			*(colon_index1 + 1) = ' ';
@@ -168,7 +167,6 @@ void correct_line(char* line, char*corrected_line)
 			strcpy(colon_index1 + 2, colon_index2 + 1);
 		}
 	}
-
 }
 
 
@@ -372,7 +370,7 @@ int get_reg(char* reg)
 		if (is_equal_str(reg, branch_rd[i]))
 			return i;
 
-	return -1; // shouldn't get here
+	return -1; // shouldn't get here 
 }
 
 
@@ -397,7 +395,7 @@ int is_equal_str(char* str1, char* str2)
 // gets str of a number returns its integer value 
 int str2int(char* str) 
 {
-	if (str[0] == '0' &&  str[1] == 'x') // check if str is hex
+	if (str[0] == '0' &&  (str[1] == 'x' || (str[1] == 'X'))) // check if str is hex
 		return strtol(str, NULL, 0);
 	else // str is decimal 
 		return strtol(str, NULL, 10); 
