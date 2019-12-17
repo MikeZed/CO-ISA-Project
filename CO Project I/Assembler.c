@@ -19,7 +19,7 @@
 // they can't be labels because they start with a digit
 #define OPCODES_LEN 17 // the length of the array above 
 
-#define REGS { "$zero", "$at", "$v0", "$a0" ,"$a1", "$t0", "$t1", "$t2", "$t3", "$s0", "$s1", "$s2", "$gp", "$sp", "$fp","$ra"} 
+#define REGS { "$zero", "$at", "$v0", "$a0" ,"$a1", "$t0", "$t1", "$t2", "$t3", "$s0", "$s1", "$s2", "$gp", "$sp", "$fp", "$ra"} 
 // all registers' indices match their number! 
 #define REGS_LEN 16 // the length of the array above 
 
@@ -59,7 +59,7 @@ int str2int(char* str);
 Label Labels[MAX_LINES]; // stores labels name and addresses 
 int label_index = 0; //first empty label index in labels array 
 
-int Memory[MAX_LINES] = { 0 }; // represents the memory, in the end we be written to memin.txt
+int Memory[MAX_LINES] = { 0 }; // represents the memory, in the end will be written to memin.txt
 int mem_index = 0; // current empty slot in memory array 
 int mem_end = 0; // store index of the last non-zero slot 
 
@@ -124,7 +124,7 @@ void read_file(FILE* asm_file, FILE* out_file, int pass_num)
 
 		// second pass - get instructions in hex and write in file
 		else 
-			write_instruction(out_file, tokens, Labels, PC);
+			write_instruction(out_file, tokens, PC);
 		
 		// update Program Counter 
 		PC += update_PC(tokens);
@@ -144,6 +144,7 @@ void write_memory_to_file(FILE* out_file)
 }
 
 // corrects line from file if there is no ' ' after ':', so we won't read the label and opcode as one token 
+// and removes whitespaces between label name and ':'
 void correct_line(char* line, char*corrected_line) 
 {
 	strcpy(corrected_line, line);
@@ -170,7 +171,7 @@ void correct_line(char* line, char*corrected_line)
 }
 
 
-// recieves tokens of the line and returns how much lines we should add to the PC
+// recieves tokens of the line and returns how much we should add to the PC
 int update_PC(char* tokens[])
 {
 	int first_token = check_value(tokens[0]);
@@ -259,7 +260,7 @@ void update_labels(char* tokens[], int PC)
 }
 
 
-// converts instruction to hex and writes to file 
+// converts instruction to hex and writes to Memory array  
 void write_instruction(FILE* out_file, char* tokens[], int PC)
 {
 	int opcode, rd, rs, rt, imm;
@@ -321,7 +322,7 @@ void write_instruction(FILE* out_file, char* tokens[], int PC)
 		mem_end = mem_index;
 }
 
-// converts string of a number (decimal or hex) to int
+// converts imm field in instruction to the appropriate value 
 int get_imm(char* str)
 {
 	// check if imm is label
@@ -362,11 +363,13 @@ int get_reg(char* reg)
 	char* regs[] = REGS;
 	char* branch_rd[] = BRANCH_RD;
 
-	for (int i = 0; i < REGS_LEN; i++) // check which register reg is
+	// check which register reg is
+	if (is_equal_str(reg, "$0")) return  0; 
+	for (int i = 0; i < REGS_LEN; i++) 
 		if (is_equal_str(reg, regs[i]))
 			return i;
 
-	for (int i = 0; i < BRANCH_RD_LEN; i++) 	// if reg is not one of the register it is part of the branch instruction
+	for (int i = 0; i < BRANCH_RD_LEN; i++) // if reg is not one of the register it is part of the branch instruction
 		if (is_equal_str(reg, branch_rd[i]))
 			return i;
 
@@ -395,7 +398,7 @@ int is_equal_str(char* str1, char* str2)
 // gets str of a number returns its integer value 
 int str2int(char* str) 
 {
-	if (str[0] == '0' &&  (str[1] == 'x' || (str[1] == 'X'))) // check if str is hex
+	if (str[0] == '0' && (str[1] == 'x' || (str[1] == 'X'))) // check if str is hex
 		return strtol(str, NULL, 0);
 	else // str is decimal 
 		return strtol(str, NULL, 10); 
