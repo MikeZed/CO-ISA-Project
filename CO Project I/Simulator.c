@@ -13,8 +13,8 @@
 #define LINE_SIZE 4
 #define REG_SIZE 16
 /*Utility func*/
-int getHex(char* source);
-int hex2int(char ch);
+int getHex(char* source); // convert string to hex.
+int hex2int(char ch); // convert char to hex.
 int getAddress(int address);
 /*Create func*/
 void createTrace(FILE* trace, int pc, char line[SIZE], int* reg[REG_SIZE], int* count);
