@@ -1,7 +1,7 @@
 //הקובץ עובד פרט לטעות אחת הקובץ ממאאוט חסר לו טעינות. כלומר לא מדויק חסר לו נתונים. שאר הקבצים תקינים ונכונים.
 #include "pch.h"
 #include <iostream>
-//#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 
