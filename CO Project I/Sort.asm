@@ -44,7 +44,7 @@ Sort:
 			lw  $s1 , $t2 , $0 , 1 # s1 = A[j+1]
 			branch blt, $s0 , $s1 , Swap
 	IF:
-			branch bne, $vo , $0 , While
+			branch bne, $v0 , $0 , While
 			branch beq, $0 , $0 , End
 
 	Swap: 
