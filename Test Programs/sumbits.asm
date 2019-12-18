@@ -58,6 +58,6 @@ Done:
 		 lw   $a1, $sp , $zero, 4 	  # restore $a1 
 		 lw   $ra, $sp , $zero, 5	  # restore $s0 
 		 limm $t0, $zero, $zero, 6	  # $t0 = 6
-		 add  $sp, $zero, $t0, 0	  # release room in stack 
+		 add  $sp, $sp, $t0, 0	  # release room in stack 
 
 		 branch jr, $ra, $0, 0		  # return 
