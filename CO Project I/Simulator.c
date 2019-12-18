@@ -1,7 +1,6 @@
-
 #include "pch.h"
 #include <iostream>
-#define _CRT_SECURE_NO_WARNINGS
+//#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -13,8 +12,8 @@
 #define LINE_SIZE 4
 #define REG_SIZE 16
 /*Utility func*/
-int getHex(char* source); // convert string to hex.
-int hex2int(char ch); // convert char to hex.
+int getHex(char* source);
+int hex2int(char ch);
 int getAddress(int address);
 /*Create func*/
 void createTrace(FILE* trace, int pc, char line[SIZE], int* reg[REG_SIZE], int* count);
@@ -84,12 +83,11 @@ int main(int argc, const char* argv[])
 	{
 		char line[SIZE];
 		snprintf(line, SIZE, "%s%c", memory_in[pc], '\0');
-		printf("%s\n", line);
+		printf("%s", line);
 		createTrace(trace, pc, line, reg, counter);
+		printf(" %d\n", *counter);
 		decipher_line(line, reg, memory_in, memory_out, pcp, max_line_counter_ptr);
-		printf(" %d ", *counter);
-		if(pc > 4095 )
-			pc -= 4095;
+		
 	}
 	//Exit:	
 	fclose(trace);
@@ -160,7 +158,10 @@ void createTrace(FILE* trace, int pc, char line[SIZE], int* reg[REG_SIZE], int* 
 	fprintf(trace, "%04X %s ", pc, line);
 	for (int i = 0; i < 16; i++)
 	{
-		fprintf(trace, "%04X ", *reg[i]);
+		int instruction = *reg[i];
+		if (instruction < 0)
+			instruction -= 0xFFFF0000;
+		fprintf(trace, "%04X ", instruction);
 	}
 	fprintf(trace, "\n");
 	(*count)++;
