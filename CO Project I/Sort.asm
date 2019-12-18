@@ -1,6 +1,6 @@
 #sort.asm
 Main: 	
-		limm $sp , $0 , $0 , 128
+		limm $sp , $0 , $0 , 500
 		.word 0x100 2 # set A[0] = 2
 		.word 0x101 5 # set A[1] = 5
 		.word 0x102 7 # set A[2] = 7
