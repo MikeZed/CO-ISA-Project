@@ -17,7 +17,7 @@ main:
 		
 sumbits: 
 		 limm $t0 , $zero, $0, -6 	  # $t0 = -6
-		 add  $sp , $zero, $t0,  0	  # make room for 6 registers in stack 			
+		 add  $sp , $sp, $t0,  0	  # make room for 6 registers in stack 			
 		 sw   $s0 , $sp , $zero, 0	  # store $s0	
 		 sw   $s1 , $sp , $zero, 1	  # store $s1	
 		 sw   $s2 , $sp , $zero, 2	  # store $s2	
