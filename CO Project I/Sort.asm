@@ -1,5 +1,6 @@
 #sort.asm
-Main: 		
+Main: 	
+		limm $sp , $0 , $0 , 128
 		.word 0x100 2 # set A[0] = 2
 		.word 0x101 5 # set A[1] = 5
 		.word 0x102 7 # set A[2] = 7
@@ -18,21 +19,18 @@ Main:
 		.word 0x10f 6 # set A[15] = 6
 		limm $a0 , $0 , $0 ,0x100 #Start of the array let it's name be A (for comment purposes)
 		limm $a1 , $0 , $0 , 16
-		jal Sort
+		jal  $0 , $0 , $0 , Sort
 		halt $0, $0, $0, 0
 
-Sort:   
-		limm $sp , S0 , $0 , 128
-	    limm $t0 , $0 , $0 , -6
-		add  $sp , $0 , $t0 ,0
+Sort: 		
+	   	limm $t0 , $0 , $0 , -6
+		add  $sp , $0 , $t0 , 0
 		sw   $s0 , $sp , $0 , 0 
 		sw   $s1 , $sp , $0 , 1
 		sw   $s2 , $sp , $0 , 2
 		sw   $a0 , $sp , $0 , 3
 		sw   $a1 , $sp , $0 , 4
 		sw   $v0 , $sp , $0 , 5
-		
-		
 		
 		limm $t0 , $0 , $0 , 1
 	While:
