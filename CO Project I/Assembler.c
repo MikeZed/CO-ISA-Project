@@ -69,18 +69,19 @@ int main(int argc, char** argv)
 	FILE * ASM_file = NULL; 
 	FILE * MEMIN = NULL; 
 
-	if (argc < 4)
+	if (argc < 3)
 	{
 		printf("Arg Amount Error\n");
+		return 1;
 	}
 
-	ASM_file = fopen(argv[2], "r");
-	MEMIN = fopen(argv[3], "w+");
+	ASM_file = fopen(argv[1], "r");
+	MEMIN = fopen(argv[2], "w");
 
 	if (ASM_file == NULL || MEMIN == NULL)
 	{
 		printf("Couldn't open file, terminating process\n");
-		exit(1); 
+		return 1; 
 	}
 
 	// read file, perform first pass 
@@ -283,8 +284,8 @@ void write_instruction(char* tokens[], int PC)
 
 	if (opcode == 16) // if opcode is ".word"
 	{
-		int address = str2int(tokens[1]); // convert address to int 
-		int data = str2int(tokens[2]);    // convert data    to int  
+		int address = str2int(tokens[1 + index_offset]); // convert address to int 
+		int data = str2int(tokens[2 + index_offset]);    // convert data    to int  
 
 		Memory[address] = data;
 
