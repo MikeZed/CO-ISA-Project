@@ -33,6 +33,7 @@ Sort:
 		sw   $v0 , $sp , $0 , 5
 		
 		limm $t0 , $0 , $0 , 1
+		sub $a1, $a1 , $t0 ,0
 	While:
 			add $v0 , $0 , $0, 0	# vo: bool swapped = 0 (false)			
 			sub $s2 , $0 , $t0, 0  # set j = -1
