@@ -14,9 +14,8 @@
 #define MAX_LABEL_LEN 51 // +1 for '\0'
 #define MAX_TOKENS_IN_LINE 6
 
-#define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "0ph", "1ph", "2ph","halt", ".word"} 
-// all values' indices match their opcode number! "0ph", "1ph" and "2ph" are place holders so the "halt"'s index would be 15, 
-// they can't be labels because they start with a digit
+#define OPCODES { "add", "sub", "mul", "and" ,"or", "sll", "sra", "limm", "branch", "jal", "lw", "sw", "in", "out", "play", "halt", ".word"} 
+// all values' indices match their opcode number! 
 #define OPCODES_LEN 17 // the length of the array above 
 
 #define REGS { "$zero", "$at", "$v0", "$a0" ,"$a1", "$t0", "$t1", "$t2", "$t3", "$s0", "$s1", "$s2", "$gp", "$sp", "$fp", "$ra"} 
@@ -24,7 +23,7 @@
 #define REGS_LEN 16 // the length of the array above 
 
 
-#define BRANCH_RD { "beq", "bne", "bgt", "blt", "bge", "ble", "jr"}
+#define BRANCH_RD { "beq", "bne", "bgt", "blt", "bge", "ble", "jr", "reti"}
 // all branch rd values match their number!  
 #define BRANCH_RD_LEN 7 // the length of the array above 
 
@@ -195,9 +194,9 @@ int update_PC(char* tokens[])
 
 	if (opcode <= 6 || opcode == 15)  // if opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra" or "halt"
 		return 1;
-	else     // opcode is "limm", "branch", "jal", "lw" or "sw"
+	else     // opcode is "limm", "branch", "jal", "lw", "sw", "in" or "out"
 	{     
-		if (opcode == 8 && strcmp(tokens[rd_index], "jr") == 0) return 1; // if opcode is "branch" and rd is "jr" increase PC by 1 
+		if (opcode == 8 && (strcmp(tokens[rd_index], "jr") == 0 || strcmp(tokens[rd_index], "reti") == 0)) return 1; // if opcode is "branch" and rd is "jr" otr reti increase PC by 1 
 		else return 2; // else increase PC by 2
 	}
 }
@@ -301,10 +300,10 @@ void write_instruction(char* tokens[], int PC)
 	imm = get_imm(tokens[4 + index_offset]);
 
 
-	if (opcode >= 7 && opcode <= 11)   // opcode is "limm", "branch", "jal", "lw" or "sw"
+	if (opcode >= 7 && opcode <= 13)   // opcode is "limm", "branch", "jal", "lw", "sw", "in" or "out"
 	{
 		use_imm = TRUE;
-		if (opcode == 8 && rd == 6) // if opcode is "branch" and rd is "jr" imm is not used 
+		if (opcode == 8 && (rd == 6 || rd==7)) // if opcode is "branch" and rd is "jr" or "reti" imm is not used 
 			use_imm = FALSE;
 	}
 
