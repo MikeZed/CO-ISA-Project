@@ -1,0 +1,11 @@
+int reg[3] = {0xFA23,0xEB5A,0x34D2};
+    int reg_num = 2;
+    printf("Hello World");
+    char str_final[20], src[20];
+	strcpy(str_final, "R");
+	itoa(reg_num, src, 10);
+	strcat(str_final, src);
+	strcat(str_final, " = ");
+	itoa(reg[reg_num], src, 16);
+	strcat(str_final, src);
+	printf("%s", str_final);
