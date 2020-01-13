@@ -43,7 +43,7 @@ void write_instruction(char* tokens[], int PC);
 int check_value(char* line_start);
 int get_reg(char* reg);
 
-void correct_line(char* line, char*corrected_line);
+void correct_line(char* line, char* corrected_line);
 void get_tokens(char* line, char* tokens[]);
 
 int get_imm(char* str);
@@ -65,8 +65,8 @@ int mem_end = 0; // store index of the last non-zero slot
 
 int main(int argc, char** argv)
 {
-	FILE * ASM_file = NULL; 
-	FILE * MEMIN = NULL; 
+	FILE* ASM_file = NULL;
+	FILE* MEMIN = NULL;
 
 	if (argc < 3)
 	{
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 	if (ASM_file == NULL || MEMIN == NULL)
 	{
 		printf("Couldn't open file, terminating process\n");
-		return 1; 
+		return 1;
 	}
 
 	// read file, perform first pass 
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	fclose(ASM_file);
 	fclose(MEMIN);
 
-	return 0; 
+	return 0;
 }
 
 
@@ -122,29 +122,31 @@ void read_file(FILE* asm_file, int pass_num)
 			update_labels(tokens, PC);
 
 		// second pass - get instructions in hex and write in file
-		else 
+		else
 			write_instruction(tokens, PC);
-		
+
 		// update Program Counter 
 		PC += update_PC(tokens);
 
 	}
-	rewind(asm_file); 
+	rewind(asm_file);
 }
 
 
 // writes to out_file the contents of the memory array 
 void write_memory_to_file(FILE* out_file)
 {
-	for (int i = 0; i < mem_end; i++) {
-		fprintf(out_file, "%04X\n", Memory[i] & 0xffff); // "& 0xffff " is for dealing with negative numbers
+	fprintf(out_file, "\{\"%04X\"\,\n", Memory[0] & 0xffff); // "& 0xffff " is for dealing with negative numbers
+	for (int i = 1; i < mem_end-1; i++) {
+		fprintf(out_file, "\"%04X\"\,\n", Memory[i] & 0xffff); // "& 0xffff " is for dealing with negative numbers
 	}
+	fprintf(out_file, "\"%04X\"\n\}", Memory[mem_end - 1] & 0xffff); // "& 0xffff " is for dealing with negative numbers
 
 }
 
 // corrects line from file if there is no ' ' after ':', so we won't read the label and opcode as one token 
 // and removes whitespaces between label name and ':'
-void correct_line(char* line, char*corrected_line) 
+void correct_line(char* line, char* corrected_line)
 {
 	strcpy(corrected_line, line);
 
@@ -154,9 +156,9 @@ void correct_line(char* line, char*corrected_line)
 		while (*(colon_index1 - 1) == ' ' || *(colon_index1 - 1) == '\t') // make sure there are no whitespaces before ':' 
 		{
 			*(colon_index1 - 1) = ':';
-			*(colon_index1) = ' '; 
+			*(colon_index1) = ' ';
 			colon_index1--;
-		} 
+		}
 
 		if (*(colon_index1 + 1) != ' ' || *(colon_index1 + 1) != '\t') // make sure there is at least one whitespaces after ':'  
 		{
@@ -195,7 +197,7 @@ int update_PC(char* tokens[])
 	if (opcode <= 6 || opcode == 15)  // if opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra" or "halt"
 		return 1;
 	else     // opcode is "limm", "branch", "jal", "lw", "sw", "in" or "out"
-	{     
+	{
 		if (opcode == 8 && (strcmp(tokens[rd_index], "jr") == 0 || strcmp(tokens[rd_index], "reti") == 0)) return 1; // if opcode is "branch" and rd is "jr" otr reti increase PC by 1 
 		else return 2; // else increase PC by 2
 	}
@@ -235,15 +237,15 @@ void get_tokens(char* line, char* tokens[])
 	}
 
 	for (int i = tokens_index; i < MAX_TOKENS_IN_LINE; i++) // set rest tokens to NULL 
-		tokens[i] = NULL; 
+		tokens[i] = NULL;
 }
 
 
 // updates the labels array 
-void update_labels(char* tokens[], int PC) 
+void update_labels(char* tokens[], int PC)
 {
 	if (check_value(tokens[0]) != -1) // check if label is present in the line 
-		return; 
+		return;
 
 	strcpy(Labels[label_index].name, tokens[0]); //add label to the array 
 	Labels[label_index].address = PC;
@@ -254,7 +256,7 @@ void update_labels(char* tokens[], int PC)
 
 	Labels[label_index].name[i] = '\0';
 
-	label_index++; 
+	label_index++;
 }
 
 
@@ -289,7 +291,7 @@ void write_instruction(char* tokens[], int PC)
 		Memory[address] = data;
 
 		if (address + 1 > mem_end)
-			mem_end = address+1;
+			mem_end = address + 1;
 		return;
 	}
 
@@ -303,14 +305,14 @@ void write_instruction(char* tokens[], int PC)
 	if (opcode >= 7 && opcode <= 13)   // opcode is "limm", "branch", "jal", "lw", "sw", "in" or "out"
 	{
 		use_imm = TRUE;
-		if (opcode == 8 && (rd == 6 || rd==7)) // if opcode is "branch" and rd is "jr" or "reti" imm is not used 
+		if (opcode == 8 && (rd == 6 || rd == 7)) // if opcode is "branch" and rd is "jr" or "reti" imm is not used 
 			use_imm = FALSE;
 	}
 
 	Memory[mem_index] = opcode * 16 * 16 * 16 + rd * 16 * 16 + rs * 16 + rt;
 	mem_index++;
 
-	if (use_imm) 
+	if (use_imm)
 	{
 		Memory[mem_index] = imm;
 		mem_index++;
@@ -325,9 +327,9 @@ int get_imm(char* str)
 {
 	// check if imm is label
 	for (int i = 0; i < label_index; i++) // check if imm is label, if it is return address
-		if (strcmp(str, Labels[i].name) == 0) 
-			return Labels[i].address;	
-	
+		if (strcmp(str, Labels[i].name) == 0)
+			return Labels[i].address;
+
 	return str2int(str);
 }
 
@@ -362,8 +364,8 @@ int get_reg(char* reg)
 	char* branch_rd[] = BRANCH_RD;
 
 	// check which register reg is
-	if (is_equal_str(reg, "$0")) return  0; 
-	for (int i = 0; i < REGS_LEN; i++) 
+	if (is_equal_str(reg, "$0")) return  0;
+	for (int i = 0; i < REGS_LEN; i++)
 		if (is_equal_str(reg, regs[i]))
 			return i;
 
@@ -394,10 +396,10 @@ int is_equal_str(char* str1, char* str2)
 
 
 // gets str of a number returns its integer value 
-int str2int(char* str) 
+int str2int(char* str)
 {
 	if (str[0] == '0' && (str[1] == 'x' || (str[1] == 'X'))) // check if str is hex
 		return strtol(str, NULL, 0);
 	else // str is decimal 
-		return strtol(str, NULL, 10); 
+		return strtol(str, NULL, 10);
 }
