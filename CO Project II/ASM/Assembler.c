@@ -136,8 +136,8 @@ void read_file(FILE* asm_file, int pass_num)
 // writes to out_file the contents of the memory array 
 void write_memory_to_file(FILE* out_file)
 {
-	fprintf(out_file, "\{\"%04X\"\,\n", Memory[0] & 0xffff); // "& 0xffff " is for dealing with negative numbers
-	for (int i = 1; i < mem_end-1; i++) {
+	fprintf(out_file, "{\n");
+	for (int i = 0; i < mem_end - 1; i++) {
 		fprintf(out_file, "\"%04X\"\,\n", Memory[i] & 0xffff); // "& 0xffff " is for dealing with negative numbers
 	}
 	fprintf(out_file, "\"%04X\"\n\}", Memory[mem_end - 1] & 0xffff); // "& 0xffff " is for dealing with negative numbers
