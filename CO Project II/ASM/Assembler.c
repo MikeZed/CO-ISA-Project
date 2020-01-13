@@ -25,7 +25,7 @@
 
 #define BRANCH_RD { "beq", "bne", "bgt", "blt", "bge", "ble", "jr", "reti"}
 // all branch rd values match their number!  
-#define BRANCH_RD_LEN 7 // the length of the array above 
+#define BRANCH_RD_LEN 8 // the length of the array above 
 
 
 typedef	struct label {
