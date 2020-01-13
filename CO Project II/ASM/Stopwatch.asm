@@ -2,15 +2,17 @@
 
 main: 
 							# intialize IO Registers 
-						
+		limm $t0, $zero, $zero, 256	
+	 	limm $t1, $zero, $zero, 1 
+		
 		out $zero, $zero, $zero, 0		# intialize IORegister[0]
 		out $zero, $zero, $zero, 1		# intialize IO Registers[1]
 		out $zero, $zero, $zero, 2		# intialize IO Registers[2]
-		out $zero, $zero, $zero, 3		# intialize IO Registers[3]
+		out $t0, $zero, $zero, 3		# intialize IO Registers[3]
 		out $zero, $zero, $zero, 4		# intialize IO Registers[4]
 		out $zero, $zero, $zero, 5		# intialize IO Registers[5]
 		
-		out $zero, $zero, $zero, 1		# enable interrupts 
+		out $t1, $zero, $zero, 1		# enable interrupts 
 		
 			
 		jal $zero, $zero, $zero, cnt_time 	#  start counting 
