@@ -1,6 +1,6 @@
 
 
-branch beq $zero, $zero, $zero, main  
+branch beq $zero, $zero, $zero, main  # jump to main 
 
 
 hndl_int: 							# handles interrupts 
