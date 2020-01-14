@@ -1,5 +1,33 @@
 
 
+branch beq $zero, $zero, $zero, main  
+
+
+hndl_int: 							# handles interrupts 
+		
+		#----------------------#	
+		# handles interrupt 1 - Timer
+		# check if timer interrupt - if it is add 1 to $s0 
+		
+		#----------------------#
+		# handles interrupt 2 - BTNC
+		# use $s3 for pausing 
+		
+		
+
+		#----------------------#
+		# handles interrupt 3 - BTND 	
+		# check if BTND interrupt - if it is $s0 = 0 
+		
+		
+		
+		#----------------------#		
+												
+		branch reti, $zero, $zero, 0 			# return to program
+
+
+
+
 main: 
 		#----------------------#	
 		# initialize IO Registers 
@@ -57,37 +85,6 @@ Done:
 
 
 
-
-
-
-
-
-
-
-hndl_int: 							# handles interrupts 
-		
-		#----------------------#	
-		# handles interrupt 1 - Timer
-		# check if timer interrupt - if it is add 1 to $s0 
-		
-		#----------------------#
-		# handles interrupt 2 - BTNC
-		# use $s3 for pausing 
-		
-		
-
-		#----------------------#
-		# handles interrupt 3 - BTND 	
-		# check if BTND interrupt - if it is $s0 = 0 
-		
-		
-		
-		#----------------------#		
-								
-								
-
-
-		branch reti, $zero, $zero, 0 			# return to program
 
 
 
