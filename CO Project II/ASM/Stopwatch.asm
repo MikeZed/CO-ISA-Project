@@ -31,7 +31,7 @@ main:
 		limm $s1, $zero, $zero, 0			# $s0 - seconds
 		limm $s2, $zero, $zero, 0 			# $s0 - minutes
 	
-		limm $s3, $zero, $zero, 0 			# $s3 - for pausing -> 1 - pouse, 0 - running
+		limm $s3, $zero, $zero, 0 			# $s3 - for pausing -> 1 - pause, 0 - running 
 
 		#----------------------#	
 cnt_time:	# updates time counters 
