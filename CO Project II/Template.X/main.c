@@ -9,6 +9,7 @@
 #include <xc.h>  
 #include <sys/attribs.h>
 #include <string.h>
+#incluse <stdlib.h>
      
 //==================================================
 //              Global Configuration
@@ -18,15 +19,18 @@
 #pragma config FSOSCEN =	OFF
 #pragma config POSCMOD =	EC
 #pragma config OSCIOFNC =	ON
-#pragma config FPBDIV =     DIV_1
+#pragma config FPBDIV =     DIV_2
 
 // Device Config Bits in  DEVCFG2:	
 #pragma config FPLLIDIV =	DIV_2
 #pragma config FPLLMUL =	MUL_20
 #pragma config FPLLODIV =	DIV_1
 
- #define _XTAL_FREQ 8000000
+#pragma config JTAGEN = OFF
+#pragma config FWDTEN = OFF
 
+#define _XTAL_FREQ 8000000
+#define TMR_TIME4 0.001
 
 
 
@@ -36,9 +40,9 @@ void Timer4Setup()
     if(!fTimerInitialised)
     {        
                                           //  setup peripheral
-        PR4 = 10000;                        //             set period register, generates one interrupt every 1 ms
+        PR4 = (int)(((float)(TMR_TIME4*PB_FRQ)/64)-1);                        //             set period register, generates one interrupt every 1 ms
         TMR4 = 0;                           //             initialize count to 0
-        T4CONbits.TCKPS = 3;                //            1:256 prescale value
+        T4CONbits.TCKPS = 6;                //            1:256 prescale value
         T4CONbits.TGATE = 0;                //             not gated input (the default)
         T4CONbits.TCS = 0;                  //             PCBLK input (the default)
         T4CONbits.ON = 1;                   //             turn on Timer1
@@ -66,12 +70,13 @@ void init(){
     LED_Init();
     BTN_Init();
     REG_Init();
+    SWT_Init();
     RGBLED_Timer5Setup();
     Timer4Setup();
     pc=0;
-    counter=0;
+    inst_count=0;
     num_of_reg = 0;
-    address_Init();
+    //address_Init();
     IOREG_Init();
     
 }
@@ -86,7 +91,7 @@ void main(){
     
     if(SWT_GetValue(7))
     {
-        IEC0bits.T4IE = 0; 
+        IEC0bits.T5IE = 0; 
         sim(fib);        
     }
     else
