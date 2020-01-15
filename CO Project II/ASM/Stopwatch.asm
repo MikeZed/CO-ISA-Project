@@ -1,5 +1,4 @@
 
-``` nasm
 branch beq $zero, $zero, $zero, main  				# jump to main 
 
 
@@ -80,10 +79,6 @@ branch_pause:	branch beq $zero, $zero, $zero, cnt_time  	# jump to cnt_time
 
 Done:		halt $zero, $zero, $zero, 0 			# halt
 
-
-
-
-```
 
 
 
