@@ -1,6 +1,6 @@
 
 
-branch beq $zero, $zero, $zero, main  # jump to main 
+branch beq $zero, $zero, $zero, main  				# jump to main 
 
 
 hndl_int: 							# handles interrupts 
@@ -8,6 +8,8 @@ hndl_int: 							# handles interrupts
 		#----------------------#	
 		# handles interrupt 1 - Timer
 		# check if timer interrupt - if it is add 1 to $s0 
+		
+		
 		
 		#----------------------#
 		# handles interrupt 2 - BTNC
@@ -34,13 +36,9 @@ main:
 		
 		limm $t0, $zero, $zero, 1 			# $t0 = 1 for IO Registers[0]
 		
-		
-		limm $t1, $zero, $zero, 75637863783673		# $t1 = 75637863783673 for IO Registers[2] - hndl_int הכתובת של
-		
+		limm $t1, $zero, $zero, 2			# $t1 = 2 for IO Registers[2] - hndl_int הכתובת של
 		
 		limm $t2, $zero, $zero, 256	       		# $t2 = 256 for IO Registers[3]
-		
-		
 		
 		out $zero, $zero, $zero, 0			# initialize IORegister[0]
 		out $zero, $zero, $zero, 1			# initialize IORegister[1]
@@ -65,23 +63,22 @@ main:
 cnt_time:	# updates time counters 
 		
 		# check $s3 
-		branch bne $s3, $zero, $zero, branch_pause  		# $s3 != 0 -> $s3 == 1 -> in pause 
+		branch bne $s3, $zero, $zero, branch_pause  	# $s3 != 0 -> $s3 == 1 -> in pause 
 		
 		# calc $s1 (seconds) from $s0 
 		# calc $s2 (minutes)  from $s0 
 						
 		# check if min is 1, 3 , 5...
 		# if true play music  
-							
-							
+		
+		# calc seconds, minutes for display, e.g. if min = 0x14 then minutes in SSD will be: 20  
+		# update SSD 				
+	
+	
+	
+branch_pause:	branch beq $zero, $zero, $zero, cnt_time  	# jump to cnt_time
 
-branch_pause:
-
-		branch beq $zero, $zero, $zero, cnt_time  	# jump to cnt_time
-
-
-Done:
-		halt $zero, $zero, $zero, 0 			# halt
+Done:		halt $zero, $zero, $zero, 0 			# halt
 
 
 
