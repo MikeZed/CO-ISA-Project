@@ -1,5 +1,5 @@
 
-
+''' nasm
 branch beq $zero, $zero, $zero, main  				# jump to main 
 
 
@@ -84,6 +84,7 @@ Done:		halt $zero, $zero, $zero, 0 			# halt
 
 
 
+'''
 
 
 
