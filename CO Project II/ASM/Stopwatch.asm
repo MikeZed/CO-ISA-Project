@@ -184,7 +184,7 @@ get_tens:	sub $t2, $t2, $t0, 0 				# $t2 = $t2 - 10
 		lw   $t1 , $sp , $zero, -2			# restore $t1	
 		lw   $t2 , $sp , $zero, -3	 		# restore $t2	
 
-		branch jr, $ra, $zero, 0 			$ return to program 
+		branch jr, $ra, $zero, 0 			# return to program 
 		
 		
 		
