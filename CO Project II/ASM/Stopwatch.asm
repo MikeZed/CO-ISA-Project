@@ -174,7 +174,7 @@ get_tens:	sub $t2, $t2, $t0, 0 				# $t2 = $t2 - 10
 		
 		limm $t0, $zero, $zero, 4 			# $t0 = 4 
 		sll $v0, $v0, $t0, 0 				# $v0 = $v0 << 4 -> 0000|0000|tens|0000
-		add $v0, $v0, $t1 				# $v0 = $v0+$t1  -> 0000|0000|tens|unity 
+		add $v0, $v0, $t1, 0				# $v0 = $v0+$t1  -> 0000|0000|tens|unity 
 		#----------------------#
 		
 		limm $t0 , $zero, $0, -3	 		# $t0 = 3
