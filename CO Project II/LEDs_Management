@@ -1,0 +1,19 @@
+
+
+LEDS_state = 0 // global variable - represnts the state of all 8 LEDs 
+
+
+// used for getting the wanted behavior of the LEDs in the project 
+// cyclically  turns on the LEDS 
+// should be called every time the simulator encounters "reti" command
+void light _them_up()
+{
+  if (LEDS_state == 0)
+    LEDS_state = 1;
+    
+   else 
+    LEDS_state = LEDS_state << 1
+    
+    LED_SetGroupValue(LEDS_state);
+
+}
