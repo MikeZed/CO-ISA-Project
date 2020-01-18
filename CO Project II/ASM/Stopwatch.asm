@@ -55,7 +55,7 @@ no_int2:
 		lw $t0, $sp, $zero, -1				 # restore $t0 
 		lw $t1, $sp, $zero, -2	 			 # restore $t1 
 						
-		branch reti, $zero, $zero, 0 			# return to program
+		branch reti, $zero, $zero, 0 			 # return to program
 
 
 
@@ -135,7 +135,7 @@ no_play:
 		
 		#----------------------#
 	
-		branch beq, $zero, $zero, cnt_time  	# jump to cnt_time
+		branch beq, $zero, $zero, cnt_time  		# jump to cnt_time
 
 Done:		halt $zero, $zero, $zero, 0 			# halt
 
@@ -144,11 +144,11 @@ Done:		halt $zero, $zero, $zero, 0 			# halt
 prep_for_disp: 							# returns corrected number for display
 								# e.g. if num = 0x14 (=20) then return 0x20  
 								
-		sw   $t0 , $sp , $zero, -1	 		# store $t0	
-		sw   $t1 , $sp , $zero, -2			# store $t1	
-		sw   $t2 , $sp , $zero, -3	 		# store $t2	
+		sw $t0, $sp, $zero, -1	 			# store $t0	
+		sw $t1, $sp, $zero, -2				# store $t1	
+		sw $t2, $sp, $zero, -3	 			# store $t2	
 
-		limm $t0 , $zero, $0, -3 	 		# $t0 = -3
+		limm $t0 , $zero, $zero, -3 	 		# $t0 = -3
 		add  $sp , $sp, $t0,  0				# make room for 3 registers in stack 	
 		
 		#----------------------# 
@@ -178,7 +178,7 @@ get_tens:	sub $t2, $t2, $t0, 0 				# $t2 = $t2 - 10
 		#----------------------#
 		
 		limm $t0, $zero, $zero, 3	 		# $t0 = 3
-		add  $sp, $sp, $t0,  0				# release room in stack 
+		add  $sp, $sp, $t0, 0				# release room in stack 
 		
 		lw $t0, $sp, $zero, -1	 			# restore $t0	
 		lw $t1, $sp, $zero, -2				# restore $t1	
