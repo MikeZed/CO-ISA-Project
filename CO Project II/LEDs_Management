@@ -12,8 +12,12 @@ void light _them_up()
     LEDS_state = 1;
     
    else 
-    LEDS_state = LEDS_state << 1
-    
+   {
+   		if (LEDS_state == 1<<7)
+			LEDS_state = 1;
+      else 
+	  	LEDS_state = LEDS_state << 1
+    }
     LED_SetGroupValue(LEDS_state);
 
 }
