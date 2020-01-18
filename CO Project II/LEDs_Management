@@ -1,6 +1,6 @@
 
 
-LEDS_state = 0 // global variable - represnts the state of all 8 LEDs 
+char LEDS_state = 0 // global variable - represnts the state of all 8 LEDs 
 
 
 // used for getting the wanted behavior of the LEDs in the project 
