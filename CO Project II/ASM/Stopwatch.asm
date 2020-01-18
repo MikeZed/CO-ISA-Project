@@ -7,7 +7,7 @@ hndl_int: 							# handles interrupts
 		sw $t0, $sp, $zero, -1	 			# store $t0	
 		sw $t1, $sp, $zero, -2				# store $t1	
 
-		limm $t0, $zero, $0, -2 	 		# $t0 = -2
+		limm $t0, $zero, $zero, -2 	 		# $t0 = -2
 		add  $sp, $sp, $t0,  0				# make room for 2 registers in stack 		
 
 		in $t0, $zero, $zero, 1				# get IORegister[1] - interrupt reason
@@ -177,12 +177,12 @@ get_tens:	sub $t2, $t2, $t0, 0 				# $t2 = $t2 - 10
 		add $v0, $v0, $t1, 0				# $v0 = $v0+$t1  -> 0000|0000|tens|unity 
 		#----------------------#
 		
-		limm $t0 , $zero, $0, -3	 		# $t0 = 3
-		add  $sp , $sp, $t0,  0				# release room in stack 
+		limm $t0, $zero, $zero, 3	 		# $t0 = 3
+		add  $sp, $sp, $t0,  0				# release room in stack 
 		
-		lw   $t0 , $sp , $zero, -1	 		# restore $t0	
-		lw   $t1 , $sp , $zero, -2			# restore $t1	
-		lw   $t2 , $sp , $zero, -3	 		# restore $t2	
+		lw $t0, $sp, $zero, -1	 			# restore $t0	
+		lw $t1, $sp, $zero, -2				# restore $t1	
+		lw $t2, $sp, $zero, -3	 			# restore $t2	
 
 		branch jr, $ra, $zero, 0 			# return to program 
 		
