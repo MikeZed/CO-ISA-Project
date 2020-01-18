@@ -1,0 +1,12 @@
+void in(int rd, int rs)
+{
+  int imm = memout[pc+1];
+  reg[rd] = ioReg[rs+imm];
+}
+
+
+void out(int rd, int rs)
+{
+  int imm = memout[pc+1];
+  ioReg[rs + imm] = reg[rd];
+}
