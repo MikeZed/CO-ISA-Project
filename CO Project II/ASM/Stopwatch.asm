@@ -19,7 +19,7 @@ hndl_int: 							# handles interrupts
 		and $t1, $t0, $t1, 0				# $t1 = timer interrupt bit
 		branch beq, $t1, $zero, no_int0			# $t1 == 0 -> no timer interrupt 
 	
-		branch bne, $s0, $zero, $zero, no_int0		# $s0 != 0 -> $s0 == 1 -> in pause 
+		branch bne, $s0, $zero, no_int0			# $s0 != 0 -> $s0 == 1 -> in pause 
 		
 		limm $t1, $zero, $zero, 1			# $t1 = 1
 		add $s1, $s1, $t1, 0 				# $s1 += 1	
