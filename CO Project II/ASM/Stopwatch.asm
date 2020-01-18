@@ -135,7 +135,7 @@ no_play:
 		
 		#----------------------#
 	
-		branch beq $zero, $zero, $zero, cnt_time  	# jump to cnt_time
+		branch beq, $zero, $zero, $zero, cnt_time  	# jump to cnt_time
 
 Done:		halt $zero, $zero, $zero, 0 			# halt
 
