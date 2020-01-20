@@ -33,15 +33,15 @@ no_int0:
 		branch beq, $t1, $zero, no_int1			# $t1 == 0 -> no btnc interrupt 
 		
 		limm $t1, $zero, $zero, 1			# $t1 = 1
-		sub $s0, $t1, $s0, 0 				# $s1 = $t1 - $s0 = 1 - $s0 = NOT($s0)	
+		sub $s0, $t1, $s0, 0 				# $s0 = $t1 - $s0 = 1 - $s0 = NOT($s0)	
 		
 no_int1:
 		#----------------------#
 		# handles interrupt 3 - BTND 	
 		
-		limm $t1, $zero, $zero, 2			# $t1 = 4
-		and $t1, $t0, $t1, 0				# $t1 = btnc interrupt bit
-		branch beq, $t1, $zero, no_int2  		# $t1 == 0 -> no btnc interrupt  
+		limm $t1, $zero, $zero, 4			# $t1 = 4
+		and $t1, $t0, $t1, 0				# $t1 = btnd interrupt bit
+		branch beq, $t1, $zero, no_int2  		# $t1 == 0 -> no btnd interrupt  
 		
 		limm $s1, $zero, $zero, 0 			# $s1 = 0 
 		limm $s2, $zero, $zero, 0 			# $s2 = 0 
@@ -90,7 +90,7 @@ main:
 cnt_time:	# updates time counters 
 		
 		limm $t2, $zero, $zero, 60			# $t2 = 60
-		branch blt, $s1, $t2, no_add_min 		# $s0 < 60 -> a minute has not yet passed 
+		branch blt, $s1, $t2, no_add_min 		# $s1 < 60 -> a minute has not yet passed 
 	
 		limm $t3, $zero, $zero, 1 			# $t3 = 1 
 		add $s2, $s2, $t3, 0				# $s2 += 1 
@@ -158,11 +158,14 @@ prep_for_disp: 							# returns corrected number for display
 		add $t2,  $a0, $zero, 0 			# $t2 = $a0 + 0 = $a0
 		limm $v0, $zero, $zero, 0 			# $v0 = 0 
 		
+		branch blt, $t2, $t0, no_tens                  # $t2 < 10 -> branch no_tens
+		
 get_tens:	sub $t2, $t2, $t0, 0 				# $t2 = $t2 - 10 
 		add $v0, $v0, $t1, 0 				# $v0++ 
 		
-		branch bge, $t2, $t0, get_tens                  # $t2 >= 10 -> branch 		
-		
+		branch bge, $t2, $t0, get_tens                  # $t2 >= 10 -> branch get_tens		
+
+no_tens:
 		# $v0 = 0000|0000|0000|tens
 		#----------------------# 
 		# get unity digit  
