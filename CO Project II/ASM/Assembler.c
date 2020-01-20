@@ -94,7 +94,10 @@ int main(int argc, char** argv)
 
 	fclose(ASM_file);
 	fclose(MEMIN);
-
+	for (int i = 0; i < label_index; i++)
+	{
+		printf("%s %d\n", Labels[i].name, Labels[i].address);
+	}
 	return 0;
 }
 
@@ -114,9 +117,9 @@ void read_file(FILE* asm_file, int pass_num)
 	while (fgets(line, MAX_LINE_LEN, asm_file) != NULL) // read file line by line 
 	{
 		correct_line(line, corrected_line);
-
+		printf("%d %s", PC, corrected_line);
 		get_tokens(corrected_line, tokens);
-
+	
 		// first pass - get labels
 		if (pass_num == 1)
 			update_labels(tokens, PC);
@@ -194,7 +197,7 @@ int update_PC(char* tokens[])
 	}
 	if (opcode == 16) return 0; // if opcode is ".word" 
 
-	if (opcode <= 6 || opcode == 15)  // if opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra" or "halt"
+	if (opcode <= 6 || opcode >= 14)  // if opcode is "add", "sub", "mul", "and" ,"or", "sll", "sra", "play" or "halt"
 		return 1;
 	else     // opcode is "limm", "branch", "jal", "lw", "sw", "in" or "out"
 	{
