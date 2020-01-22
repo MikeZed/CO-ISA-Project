@@ -62,7 +62,7 @@ no_int2:
 main: 
 		#----------------------#	
 		# initialize IO Registers 
-		
+		limm $sp, $zero, $zero, 300 			# $sp = 300 
 		limm $t0, $zero, $zero, 1 			# $t0 = 1 for IO Registers[0]
 		
 		limm $t1, $zero, $zero, 2			# $t1 = 2 for IO Registers[2] - hndl_int הכתובת של
@@ -110,7 +110,7 @@ no_add_min:
 		branch beq, $t2, $zero, no_play 		# $t2 == 0 -> $s2 is even -> no_play 
 		branch bne, $s1, $zero, no_play 		# $s1 != 0 -> a full minute hasn't passed yet -> no_play 
 		
-		play $zero, $zero, $zero, 0 			# play audio 
+		limm $fp, $zero, $zero, 15			# play audio 
 		
 no_play: 		
 		#----------------------#
@@ -191,12 +191,3 @@ no_tens:
 		
 		
 		
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-								# check if need to interrupt
-		in $t0, $zero, $zero, 1				# get IORegister[1]
-		branch bnq, $t0, $zero, hndl_int 		# if IORegister[1] is not zero -> handle interrupt
-
-
-
